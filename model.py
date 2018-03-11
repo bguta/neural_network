@@ -52,7 +52,15 @@ class Neuron:
         this.error += err
 
     def sigmoid(this, x):     # the activation function
-        return 1 / (1 + math.exp(-x * 1.0))
+
+        if(x < -709.0):
+            return 0.0
+        try:
+            val = 1 / (1 + math.exp(x * -1.0))
+        except OverflowError:
+            print("The sumOutput is: " + str(x))
+            raise ValueError("The number is too big for the sigmoid")
+        return val
 
     def dSigmoid(this, x):    # derivitave of the sigmoid; used for the gradient during backpropagation
         return x * (1.0 - x)
@@ -154,7 +162,7 @@ class Network:
                     layer.append(n)
                 else:
                     # get the last layer as the connections for the neuron
-                    n = Neuron(this.layer[-1])
+                    n = Neuron(this.layers[-1])
                     layer.append(n)
 
             # add a bias neuron to make a better fit
@@ -162,7 +170,7 @@ class Network:
             layer[-1].setOutput(1.0)  # set the output of the bias to 1
 
             # add this layer to the list of layers
-            this.layer.append(layer)
+            this.layers.append(layer)
 
     # setter and getter functions
     def setInput(this, inputs):
@@ -237,7 +245,7 @@ class Network:
         # reverses the order i.e from output to input
         for layer in this.layers[::-1]:
             for n in layer:
-                n.backpropagate()
+                n.backPropagate()
 
     def getResults(this):
         """
