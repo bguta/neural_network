@@ -5,10 +5,11 @@ import numpy as np
 class Connection:
     '''
     @param connectedNeuron
-        the neuron that is connected
+    the neuron that is connected
     '''
     def __init__(this, connectedNeuron):
         this.connectedNeuron = connectedNeuron
+        assert this.connectedNeuron is not None, "empyt connected neuron in connection"
         this.weight = np.random.normal()
         this.dWeight = 0.0  # delta weight of the connection
 
@@ -16,13 +17,13 @@ class Connection:
 class Neuron:
     '''
     @param layer
-        is a set of other neurons connected to this neuron
-        i.e the previous layer
+    is a set of other neurons connected to this neuron
+    i.e the previous layer
 
 
-    where
-        η = learning rate
-        α = momentum rate
+    where:
+    η = learning rate
+    α = momentum rate
     '''
     eta = 0.001  # learning rate
     alpha = 0.01  # momenutm factor
@@ -71,7 +72,7 @@ class Neuron:
         '''
         Checks if the there are any previously connected neurons; if there are
         than it uses their output to determine this output ; if not it is an input or bias neuron
-        and does not to feedforwar
+        and does not need to feedforward i.e change its output
         '''
         sumOutput = 0
         if len(this.connections) == 0:
@@ -87,19 +88,19 @@ class Neuron:
 
     def backPropagate(this):
         '''
-            This sets the gradient and loops through the previous connections of this neuron.
-            For each connection it calculates the change in weight and adjusts the weight
-            using the value. It finally adds the resulting error to the connected neuron.
-            It resets the error for this neuron once done the loop
+        This sets the gradient and loops through the previous connections of this neuron.
+        For each connection it calculates the change in weight and adjusts the weight
+        using the value. It finally adds the resulting error to the connected neuron.
+        It resets the error for this neuron once done the loop
 
-            formulas:
-            δweight= η x gradient x output of connected neuron + α x previous δweight
-            gradient = error x d/dy(output)
-            error += (weight * gradient)
+        formulas:
+        δweight= η x gradient x output of connected neuron + α x previous δweight
+        gradient = error x d/dy(output)
+        error += (weight * gradient)
 
-            where
-                η = learning rate
-                α = momentum rate (this will let the weights move in a certain direction avoiding fulxs)
+        where:
+        η = learning rate
+        α = momentum rate (this will let the weights move in a certain direction avoiding fulxs)
 
         '''
         # calc the gradient ; this will decide the direction of the change of
@@ -132,10 +133,10 @@ class Network:
     such that it is connected to all the neurons in the previous layer.
 
     @param topology
-        a list containing the number of neurons per layer
-        ex. [3,3,3] means three layers with three neurons. Each
-        must contain numbers greater or equal to 1. First number is
-        always the input and the last is the output
+    a list containing the number of neurons per layer
+    ex. [3,3,3] means three layers with three neurons. Each
+    must contain numbers greater or equal to 1. First number is
+    always the input and the last is the output
     '''
     def __init__(this, topology):
 
@@ -167,8 +168,99 @@ class Network:
     def setInput(this, inputs):
         '''
         @param inputs
-            a list of numbers that correspond to the input for each input neurons.
-            Must have the same length as the number of neurons in the input layer i.e the number passed in topology
+        a list of numbers that correspond to the input for each input neurons.
+        must have the same length as the number of neurons in the input layer i.e the number passed in topology
         '''
+        assert len(this.layers[0]) - 1 == len(
+            inputs), "input is not the same length as input layer rather it is %r" % len(inputs)
+
         for i in range(len(inputs)):
-            this.layer[0][i].setOutput(inputs[i])
+            this.layers[0][i].setOutput(inputs[i])
+
+    def getError(this, goal):
+        '''
+
+        This calculates the error by summing the difference squared of each neuron in the
+        output layer with its goal and then taking root of the mean.
+
+        @param goal
+        a list containing the desired outputs of the network for a given input.
+        must have the same length as the number of neurons in the output layer
+
+        @returns
+        the err of the network calculated using rms of all the output neuron errors
+        '''
+        err = 0
+        assert len(this.layers[-1]) - 1 == len(
+            goal), "goal is not the same length as output layer rather it is %r" % len(goal)
+
+        for i in range(len(goal)):
+                # find the difference between the output and the goal neuron
+            e = (goal[i] - this.layers[-1][i].getOutput())
+            err += e ** 2  # add the error squared to the sum
+
+        err /= len(goal)
+        err = math.sqrt(err)
+        return err
+
+    # propagation
+    def feedForward(this):
+        """
+        This calls the feed forward function for each neuron not in the input layer.
+        Depending on the size of the network this can take a long time
+        """
+        # set the output for every layer other than the input
+        for layer in this.layers[1:]:
+            for n in layer:
+                n.feedForward()
+
+    def backPropagate(this, goal):
+        """
+        This sets the error for output neurons based on the goal
+        and calls the backpropagate function for each neuron looping from output to
+        the input layer
+
+        @param goal
+        a list containing the desired outputs of the network for a given input.
+        must have the same length as the number of neurons in the output layer
+
+        """
+
+        assert len(this.layers[-1]) - 1 == len(
+            goal), "goal is not the same length as output layer rather it is %r" % len(goal)
+
+        for i in range(len(goal)):
+            # sets the error for each neuron in the output layer based on the
+            # desired goal
+            this.layers[-1][i].setError(goal[i] -
+                                        this.layers[-1][i].getOutput())
+        # reverses the order i.e from output to input
+        for layer in this.layers[::-1]:
+            for n in layer:
+                n.backpropagate()
+
+    def getResults(this):
+        """
+        This gets the results of the output layer
+
+        @returns
+        A list of numbers containing the output of the neurons in the output layer
+        """
+        output = []
+
+        for n in this.layers[-1]:  # output layer
+
+            '''
+            optional if threshold is desired
+
+            if n.getOutput > 0.5:
+                output.append(1.0)
+            else:
+                 output.append(0.0)
+            '''
+
+            output.append(n.getOutput())
+
+        output.pop()  # remove the bias neuron
+
+        return output
