@@ -8,9 +8,9 @@ Python 3 as well as the Numpy library
 
 to install numpy with pip on the command line use
 
-'''
+```
 pip install numpy
-'''
+```
 
 ## Getting started
 
