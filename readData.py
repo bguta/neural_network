@@ -2,7 +2,7 @@ import h5py as h5
 import numpy as np
 
 setName = "basketball"
-file = "object_nn/" + setName + "_train.h5"
+file = "object_nn\\" + setName + "_train.h5"
 
 picSize = 28
 
