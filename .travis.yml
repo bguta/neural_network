@@ -6,4 +6,4 @@ install:
   - pip install pipenv
   - pipenv install -d --system
 script:
-  - pipenv python model_test.py
+  - pipenv run pytest
