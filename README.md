@@ -1,3 +1,5 @@
+https://travis-ci.org/bguta/neural_network.svg?branch=master
+
 # Neural Network
 
 This is a simple model of a neural network
