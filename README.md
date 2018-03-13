@@ -5,12 +5,12 @@ This is a simple model of a neural network
 
 ## Prereqs
 
-Python 3 as well as the Numpy library
+Python 3.6 ; use pipenv to get the required packages
 
-to install numpy with pip on the command line use
+to install pipenv with pip on the command line use
 
 ```
-pip install numpy
+pip install pipenv
 ```
 
 ## Getting started
