@@ -3,9 +3,10 @@ import math
 
 
 '''
-This is a test of the model of the neural network using an xor truth table dataset
+This is a test of the model of the neural network using an
+xor truth table dataset
 
-@author Bereket Guta
+__author__ = Bereket Guta
 '''
 
 
