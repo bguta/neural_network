@@ -64,7 +64,7 @@ class Neuron:
         if(x > 1000):
             return 1.0
 
-        return 1 / (1 + math.exp(x * -1.0))
+        return 1 / (1 + np.exp(x * -1.0))
 
     def dSigmoid(this, x):
         # derivitave of the sigmoid; used for the
@@ -131,7 +131,7 @@ class Neuron:
             # calc the change in weight of the connection
             link.dWeight = Neuron.eta * (
                 link.connectedNeuron.output * this.gradient) + (
-                this.alpha * link.weight)
+                Neuron.alpha * link.weight)
             # set the new weight using the change in weight
             link.weight += link.dWeight
 
@@ -140,7 +140,7 @@ class Neuron:
             link.connectedNeuron.addError(link.weight * this.gradient)
 
         # reset the error
-        this.error = 0.0
+        # this.error = 0.0
 
 
 class Network:
