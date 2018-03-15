@@ -49,7 +49,7 @@ class TestModel:
 
         # back propagate
         this.neru.backPropagate()
-        assert (this.neru.getError() == 0.0)
+        assert (this.neru.getError() == 5.0)
 
     def test_hiddenNeuron(this):
         """Test the hidden layer neuron."""

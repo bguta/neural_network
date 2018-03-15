@@ -16,6 +16,7 @@ class Test:
 
         # train
         this.net.setInput(inputs[0])
-        assert this.net.network[0] == inputs[0]
+        for i, j in zip(list(this.net.network[0]), inputs[0]):
+            assert i == j
         this.net.feedForward()
         this.net.backPropagate(outputs[0])
