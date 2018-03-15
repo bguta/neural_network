@@ -22,6 +22,7 @@ class Network:
     must contain numbers greater or equal to 1. First number is
     always the input and the last is the output
     """
+    eta = 0.01
 
     def __init__(this, topology):
         """Create the network."""
@@ -87,10 +88,54 @@ class Network:
             # run the activation function
             this.network[i] = [sigmoid(x) for x in rawOutput]
 
-    def backPropagate(this):
+    def backPropagate(this, goal):
         """
+        Stochastic gradient descent
 
+        This sets the error for output neurons based on the goal
+        it then propagates this error backwards through the network
+
+        It changes the weights based on the gradient
+        and output of the layer before it.
+        it also changes the bias based on the outputs
+
+        equations:
+        gradient = eta * Error * prev_dOutput
+        dWeight = gradient (dot) transpose(prev_output) (dot product)
+        dBias = gradient
         """
+        assert len(this.network[-1]) == len(goal), (
+            "goal is not the same length as output" +
+            " layer rather it is %r" % len(goal))
+
+        this.Error = np.subtract(goal, this.network[-1])  # get the difference
+
+        restLayers = this.network[:-1]
+        errs = []
+        errs.append(this.Error)
+
+        i = len(this.weights) - 1  # start with the last layer
+        for layer in restLayers[::-1]:  # reverse the array to go backwards
+
+            layer_error = np.dot(np.transpose(this.weights[i]), errs.pop())
+
+            dOutput = [sigmoid(x, derivitave=True) for x in layer]
+
+            # calc the cahnge in weights
+            gradients = np.multiply(
+                Network.eta, np.multiply(
+                    layer_error, dOutput))
+            dWeight = np.dot(gradients, np.transpose(layer))
+
+            # add the change to the weight
+            this.weights[i] = np.add(this.weights[i], dWeight)
+
+            # add the change in bias
+            this.bias[i] = np.add(this.bias[i], gradients)
+
+            errs.append(layer_error)
+            i -= 1
+            print(i)
 
     # setters and getters methods
     def setInput(this, inputs):
@@ -104,8 +149,9 @@ class Network:
             "input is not the same length as input"
             "layer rather it is " + str(len(inputs)))
 
+        # set the inputs
         for i in range(len(inputs)):
-            this.network[0][i] == inputs[i]
+            this.network[0][i] = inputs[i]
 
 
 def sigmoid(x, derivitave=False):     # the activation function
