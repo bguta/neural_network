@@ -1,4 +1,5 @@
 import numpy as np
+import math as mt
 
 """
 This is an implementation of a neural network using mostly numpy
@@ -35,34 +36,31 @@ class Network:
         # bias[i] is the bias for network[i+1] i.e the layer it points to
         this.bias = []
 
-        this.inputL = [0] * \
-            (topology[0])  # the input layer plus the bias
+        this.inputL = np.zeros((topology[0], 1))  # create an input vector
 
         this.network.append(this.inputL)
 
-        this.outputL = [0] * topology[-1]  # the output layer
+        this.outputL = np.zeros((topology[-1], 1))  # the output vecotr layer
 
         # set up the list of hidden layers and import them into the network
         for hl in range(1, len(topology) - 1):
-            this.network.append([0] * (topology[hl]))
+            # the hidden layer vectors
+            this.network.append(np.zeros((topology[hl], 1)))
 
         this.network.append(this.outputL)  # add the output
 
         # for each layer that is not an input
         for i in range(1, len(this.network)):
             # add a column vector of 1.0
-            this.bias.append([1.0] * len(this.network[i]))
+            this.bias.append(np.ones((this.network[i].size, 1)))
 
         # this list contains a set of lists such that each index i contains the
         # weight for the (i) -> (i +1) in the list this.network
         this.weights = []
-        # setupt the weights randomly
+        # setupt the weight matrix randomly
         for i in range(1, len(this.network)):
-            this.weights.append(
-                np.random.randn(
-                    len(this.network[
-                        i]),
-                    len(this.network[i - 1])))
+            this.weights.append(np.random.randn(this.network[i].size,
+                                                this.network[i - 1].size))
 
     # propagation
     def feedForward(this):
@@ -82,11 +80,16 @@ class Network:
             # the weight from the previous layer to this layer, the output of
             # the previous layer and the bias that is points from the
             # previous layer to this layer
-            rawOutput = list(np.add(np.dot(this.weights[i - 1],
-                                           this.network[i - 1]),
-                                    this.bias[i - 1]))
+            """
+
+            print(i)
+            print(str(this.network[i - 1].shape))
+            """
+            out = np.add(np.dot(this.weights[i - 1], this.network[i - 1]),
+                         this.bias[i - 1])
             # run the activation function
-            this.network[i] = [sigmoid(x) for x in rawOutput]
+
+            this.network[i][:, 0] = [sigmoid(x) for x in out]
 
     def backPropagate(this, goal):
         """
@@ -101,10 +104,10 @@ class Network:
 
         equations:
         gradient = eta * Error * prev_dOutput
-        dWeight = gradient (dot) transpose(prev_output) (dot product)
+        dWeight = gradient (dot) transpose(prev_output)
         dBias = gradient
         """
-        assert len(this.network[-1]) == len(goal), (
+        assert this.network[-1].size == len(goal), (
             "goal is not the same length as output" +
             " layer rather it is %r" % len(goal))
 
@@ -116,17 +119,23 @@ class Network:
 
         i = len(this.weights) - 1  # start with the last layer
         for layer in restLayers[::-1]:  # reverse the array to go backwards
+            prevError = errs.pop()
 
-            layer_error = np.dot(np.transpose(this.weights[i]), errs.pop())
+            layer_error = np.dot(np.transpose(this.weights[i]), prevError)
 
-            dOutput = [sigmoid(x, derivitave=True) for x in layer]
+            dPrev = np.zeros(this.network[i + 1].shape)
+            dPrev[:, 0] = [sigmoid(x, derivitave=True)
+                           for x in this.network[i + 1]]
 
             # calc the cahnge in weights
             gradients = np.multiply(
                 Network.eta, np.multiply(
-                    layer_error, dOutput))
+                    prevError, dPrev))
+
             dWeight = np.dot(gradients, np.transpose(layer))
 
+            assert dWeight.shape == this.weights[
+                i].shape, "sizes are not equal"
             # add the change to the weight
             this.weights[i] = np.add(this.weights[i], dWeight)
 
@@ -135,7 +144,6 @@ class Network:
 
             errs.append(layer_error)
             i -= 1
-            print(i)
 
     # setters and getters methods
     def setInput(this, inputs):
@@ -150,8 +158,61 @@ class Network:
             "layer rather it is " + str(len(inputs)))
 
         # set the inputs
-        for i in range(len(inputs)):
-            this.network[0][i] = inputs[i]
+        this.network[0][:, 0] = inputs  # assign the input layer the inputs
+
+    def getError(this, goal):
+        '''
+
+        This calculates the error by summing the difference squared of
+        each neuron in the output layer with its
+        goal and then taking root of the mean.
+
+        @param goal
+        a list containing the desired outputs of the network for a given input.
+        must have the same length as the number of neurons in the output layer
+
+        @returns
+        the err of the network calculated using rms of all the
+        output neuron errors
+        '''
+        err = 0
+        assert len(this.network[-1]) == len(goal), (
+            "goal is not the same length as output layer" +
+            " rather it is %r" % len(goal))
+
+        for i in range(len(goal)):
+                # find the difference between the output and the goal neuron
+            e = (goal[i] - this.network[-1][i])
+            err += e ** 2  # add the error squared to the sum
+
+        err /= len(goal)
+        err = mt.sqrt(err)
+        return err
+
+    def getResults(this):
+        """
+        This gets the results of the output layer
+
+        @returns
+        A list of numbers containing the output of the
+        neurons in the output layer
+        """
+        output = []
+
+        for n in this.network[-1]:  # output layer
+
+            '''
+            optional if threshold is desired
+
+            if n > 0.5:
+                output.append(1.0)
+            else:
+                 output.append(0.0)
+            '''
+
+            output.append(n)
+
+        return output
 
 
 def sigmoid(x, derivitave=False):     # the activation function
