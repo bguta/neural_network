@@ -1,5 +1,4 @@
-# import readData as rd will use later
-import model as md
+import model2 as md
 import numpy as np
 import random
 
@@ -96,9 +95,6 @@ def main():
 
     composition = [inputSize, 30,
                    outputSize]  # the network composition
-    md.Network.eta = random.uniform(0.000001, 0.1)
-    print("eta: " + str(md.Network.eta))
-    md.Network.alpha = 0.1
 
     nn = md.Network(composition)
 
@@ -120,6 +116,7 @@ def train(data, goal, net, numEpochs=1):
         print("Starting epoch " + str(i))
 
         for j in range(len(data) // 3):
+            print(j)
             net.setInput(data[j][:-1])  # everythin except the label
 
             # feed it through
