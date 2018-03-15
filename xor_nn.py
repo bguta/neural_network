@@ -12,7 +12,7 @@ __author__ = Bereket Guta
 
 def main():
     # the makeup of the network
-    makeUp = [2, 100, 100, 100, 1]
+    makeUp = [2, 100, 1]
 
     # activate the network
     net = model.Network(makeUp)
