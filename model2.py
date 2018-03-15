@@ -3,6 +3,8 @@ import math as mt
 
 """
 This is an implementation of a neural network using mostly numpy
+
+@author Bereket Guta
 """
 BIAS = 1.0
 
@@ -107,11 +109,14 @@ class Network:
         dWeight = gradient (dot) transpose(prev_output)
         dBias = gradient
         """
+        g = np.zeros(this.network[-1].shape)
+        g[:, 0] = goal
+
         assert this.network[-1].size == len(goal), (
             "goal is not the same length as output" +
             " layer rather it is %r" % len(goal))
 
-        this.Error = np.subtract(goal, this.network[-1])  # get the difference
+        this.Error = np.subtract(g, this.network[-1])  # get the difference
 
         restLayers = this.network[:-1]
         errs = []
@@ -120,12 +125,18 @@ class Network:
         i = len(this.weights) - 1  # start with the last layer
         for layer in restLayers[::-1]:  # reverse the array to go backwards
             prevError = errs.pop()
+            print(str(prevError))
 
             layer_error = np.dot(np.transpose(this.weights[i]), prevError)
 
             dPrev = np.zeros(this.network[i + 1].shape)
             dPrev[:, 0] = [sigmoid(x, derivitave=True)
                            for x in this.network[i + 1]]
+
+            print("size of dPrev: " + str(dPrev.shape))
+            print("size of prevError: " + str(prevError.shape))
+            print("size of layer: " + str(layer.shape))
+            print("size of weights: " + str(this.weights[i].shape))
 
             # calc the cahnge in weights
             gradients = np.multiply(
@@ -212,7 +223,7 @@ class Network:
 
             output.append(n)
 
-        return output
+        return list(output)
 
 
 def sigmoid(x, derivitave=False):     # the activation function
