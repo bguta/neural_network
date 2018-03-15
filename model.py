@@ -1,6 +1,13 @@
 import math
 import numpy as np
 
+"""
+This is an ok model of a neural network. It needs some work
+since the bias values never change the fit sometimes gets stuck in
+an endless cycle
+
+"""
+
 
 class Connection:
     '''
@@ -10,7 +17,7 @@ class Connection:
     def __init__(this, connectedNeuron):
         this.connectedNeuron = connectedNeuron
         assert this.connectedNeuron is not None, \
-            "empyt connected neuron in connection"
+            "empty connected neuron in connection"
 
         this.weight = np.random.normal()
         this.dWeight = 0.0  # delta weight of the connection
