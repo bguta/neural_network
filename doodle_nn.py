@@ -14,15 +14,48 @@ LIGHTBULB = 1
 SUN = 2
 
 
-def makeData():
+def makeData(test=False):
     """ Make the data and return a dict that contains the data and goal."""
 
     # open the files, I already made them smaller; they contain 3000 pics each
     Ball = np.load("object_nn\sBasketball.npy")
     LightBulb = np.load("object_nn\sLight_bulb.npy")
     Sun = np.load("object_nn\sSun.npy")
+    tBall = np.load("object_nn\sBall_test.npy")
+    tLightBulb = np.load("object_nn\sLight_bulb_test.npy")
+    tSun = np.load("object_nn\sSun_test.npy")
 
     data = []
+    tData = []  # for the test
+    goal = []  # desired output for each pic
+    tGoal = []  # for the test
+
+    if test:
+        for i in range(len(tBall)):
+            tData.append(list(tBall[i]))
+            tData[-1].append(BALL)  # add tjhe label to the end of the img
+
+        for i in range(len(tLightBulb)):
+            tData.append(list(tLightBulb[i]))
+            tData[-1].append(LIGHTBULB)  # add tjhe label to the end of the img
+        for i in range(len(tSun)):
+            tData.append(list(tSun[i]))
+            tData[-1].append(SUN)  # add tjhe label to the end of the img
+
+        random.shuffle(tData)
+
+        for pic in tData:
+            # the last index tells us what the image is i.e the label
+            OUTPUT = pic[-1]
+
+            if OUTPUT == BALL:
+                tGoal.append([1.0, 0.0, 0.0])
+            elif OUTPUT == LIGHTBULB:
+                tGoal.append([0.0, 1.0, 0.0])
+            elif OUTPUT == SUN:
+                tGoal.append([0.0, 0.0, 1.0])
+            else:
+                raise ValueError("We did not get a valid image label")
 
     for i in range(len(Ball)):
         data.append(list(Ball[i]))
@@ -40,7 +73,6 @@ def makeData():
     assert (len(data) != 0)
     assert len(data[0]) - 1 == inputSize  # minus the label
 
-    goal = []  # desired output for each pic
     for pic in data:
         # the last index tells us what the image is i.e the label
         OUTPUT = pic[-1]
@@ -54,67 +86,63 @@ def makeData():
         else:
             raise ValueError("We did not get a valid image label")
 
-    return {"data": data, "goal": goal}
+    return {"data": data, "goal": goal, "tData": tData, "tGoal": tGoal}
 
 
 def main():
     """ Make the doodle neural net."""
-    # bballTrain1 = rd.read()
 
-    trainingSet = makeData()
-    """
-    bballTrain2 = rd.read(choice=3)
-    assert(len(bballTrain2) != 0 and len(bballTrain2[0]) == inputSize)
-    bballTest1 = rd.read(choice=2)
-    assert(len(bballTrain2) != 0 and len(bballTrain2[0]) == inputSize)
-    bballTest2 = rd.read(choice=4)
-    assert(len(bballTrain2) != 0 and len(bballTrain2[0]) == inputSize)
-    """
+    # get the data
+    trainingSet = makeData(test=True)
 
     composition = [inputSize, 30,
                    outputSize]  # the network composition
-    md.Network.eta = 0.1
-    md.Network.alpha = 1
+    md.Network.eta = random.uniform(0.000001, 0.1)
+    print("eta: " + str(md.Network.eta))
+    md.Network.alpha = 0.1
 
     nn = md.Network(composition)
 
     # train the network
+    test(trainingSet["tData"], trainingSet["tGoal"], nn)
     train(trainingSet["data"], trainingSet["goal"], nn)
+    test(trainingSet["tData"], trainingSet["tGoal"], nn)
 
 
-def train(data, goal, net):
+def train(data, goal, net, numEpochs=1):
     print("Starting to train...")
     prevE = 0
     i = 0
     # while True:
 
     # input("Enter q to quit else press c: ")
-    # start first round of training
-    err = 0  # the incured error
-    print("Starting epoch " + str(i))
+    for epochs in range(numEpochs):
+        err = 0  # the incured error
+        print("Starting epoch " + str(i))
 
-    for j in range(len(data) // 4):
-        net.setInput(data[j][:-1])  # everythin except the label
+        for j in range(len(data) // 3):
+            net.setInput(data[j][:-1])  # everythin except the label
 
-        # feed it through
-        net.feedForward()
+            # feed it through
+            net.feedForward()
 
-        # goal is pushed into the outputs neurons
-        net.backPropagate(goal[j])
+            # goal is pushed into the outputs neurons
+            net.backPropagate(goal[j])
 
-        err += net.getError(goal[j])
-    print("\n End of epoch: " + str(i))
-    print("\nError: " + str(err))
-    print("Change in error: " + str(err - prevE))
-    # if(err - prevE == 0.0):
-    # break
-    prevE = err
-    i += 1
+            err += net.getError(goal[j])
+        print("\n End of epoch: " + str(i))
+        print("\nError: " + str(err))
+        print("Change in error: " + str(err - prevE))
+
+        if(err - prevE == 0.0):
+            break
+        prevE = err
+        i += 1
 
     # if err <= 1:
-    #  print("Done")
+    print("Done Training")
     # break
-
+    """
     while True:
         pic = im.open("bball.png").convert("LA")
         pic.load()
@@ -133,6 +161,23 @@ def train(data, goal, net):
         print(str(net.getResults()))
         input()
         break
+    """
+
+
+def test(data, goal, net):
+    """ Test the model. """
+
+    correct = 0
+    print("Testing!")
+    for i in range(len(data)):
+        net.setInput(data[i][:-1])  # everything except label
+        net.feedForward()
+        classification = np.argmax(net.getResults())
+        answer = np.argmax(goal[i])
+        if(answer == classification):
+            correct += 1
+
+    print("\n" + str(correct * 100.0 / len(data)) + " %")
 
 
 if __name__ == "__main__":
