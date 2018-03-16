@@ -1,6 +1,8 @@
-import model
+
+
 import pytest
-import math
+import sys
+from nn_models import model
 
 
 class TestModel:

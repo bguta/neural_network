@@ -1,4 +1,6 @@
-import model2 as m2
+import sys
+sys.path.append('../')
+from nn_models import model
 
 
 '''
@@ -14,9 +16,11 @@ def main():
     makeUp = [2, 100, 1]
 
     # activate the network
-    net = m2.Network(makeUp)
+    net = model.Network(makeUp)
 
     # set the learning rate and momentum to best reach a minimum
+    model.Neuron.eta = 0.09
+    model.Neuron.alpha = 0.001
 
     # the input set
     inputs = [[0, 0], [0, 1], [1, 0], [1, 1]]

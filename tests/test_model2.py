@@ -1,6 +1,8 @@
-import model2 as m2
+
+
 import pytest
 import numpy as np
+from nn_models import model2 as m2
 
 
 class Test:

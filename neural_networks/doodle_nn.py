@@ -1,7 +1,10 @@
 # import readData as rd will use later
-import model as md
 import numpy as np
 import random
+import sys
+sys.path.append('../')
+from nn_models import model as md
+
 
 inputSize = 28 * 28  # the pixels space
 outputSize = 3  # the number of choices for objects
@@ -17,12 +20,12 @@ def makeData(test=False):
     """ Make the data and return a dict that contains the data and goal."""
 
     # open the files, I already made them smaller; they contain 3000 pics each
-    Ball = np.load("object_nn\sBasketball.npy")
-    LightBulb = np.load("object_nn\sLight_bulb.npy")
-    Sun = np.load("object_nn\sSun.npy")
-    tBall = np.load("object_nn\sBall_test.npy")
-    tLightBulb = np.load("object_nn\sLight_bulb_test.npy")
-    tSun = np.load("object_nn\sSun_test.npy")
+    Ball = np.load("../data/sBasketball.npy")
+    LightBulb = np.load("../data/sLight_bulb.npy")
+    Sun = np.load("../data/sSun.npy")
+    tBall = np.load("../data/sBall_test.npy")
+    tLightBulb = np.load("../data/sLight_bulb_test.npy")
+    tSun = np.load("../data/sSun_test.npy")
 
     data = []
     tData = []  # for the test
