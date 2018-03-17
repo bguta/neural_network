@@ -1,11 +1,10 @@
 import numpy as np
-from PIL import Image as im
+import matplotlib.image as image
 import random
 import sys
 sys.path.append('../')
-print(sys.path[-1])
 from nn_models import model2 as md
-
+import time
 
 inputSize = 28 * 28  # the pixels space
 outputSize = 3  # the number of choices for objects
@@ -15,19 +14,35 @@ BALL = 0
 LIGHTBULB = 1
 SUN = 2
 
-imgs = ["data/sun.png", "data/bball.png", "data/LightBulb.png"]
+useBigData = True
+
+imgs = [
+    "../data/sun.png",
+    "../data/bball.png",
+    "../data/LightBulb.png",
+    "../data/basketball.png"]
 
 
 def makeData(test=False):
     """ Make the data and return a dict that contains the data and goal."""
 
+    print("Importing Data...")
+
     # open the files, I already made them smaller; they contain 3000 pics each
-    Ball = np.load("../data/sBasketball.npy")
-    LightBulb = np.load("../data/sLight_bulb.npy")
-    Sun = np.load("../data/sSun.npy")
-    tBall = np.load("../data/sBall_test.npy")
-    tLightBulb = np.load("../data/sLight_bulb_test.npy")
-    tSun = np.load("../data/sSun_test.npy")
+    if useBigData:
+        Ball = np.load("../data/basketballtrain.npy")
+        LightBulb = np.load("../data/light_bulbtrain.npy")
+        Sun = np.load("../data/suntrain.npy")
+        tBall = np.load("../data/basketballtest.npy")
+        tLightBulb = np.load("../data/light_bulbtest.npy")
+        tSun = np.load("../data/suntest.npy")
+    else:
+        Ball = np.load("../data/sBasketball.npy")
+        LightBulb = np.load("../data/sLight_bulb.npy")
+        Sun = np.load("../data/sSun.npy")
+        tBall = np.load("../data/sBall_test.npy")
+        tLightBulb = np.load("../data/sLight_bulb_test.npy")
+        tSun = np.load("../data/sSun_test.npy")
 
     data = []
     tData = []  # for the test
@@ -95,11 +110,11 @@ def makeData(test=False):
 
 def main():
     """ Make the doodle neural net."""
-
+    t_in = time.time()
     # get the data
     trainingSet = makeData(test=True)
 
-    composition = [inputSize, 70, 70, 70, 70, 70,
+    composition = [inputSize, 70, 10, 10,
                    outputSize]  # the network composition
 
     nn = md.Network(composition)
@@ -111,43 +126,19 @@ def main():
     train(trainingSet["data"], trainingSet["goal"], nn)
     test(trainingSet["tData"], trainingSet["tGoal"], nn)
 
+    print("time: " + str(time.time() - t_in) + "s \n")
+
+    for p in imgs:
+        testImage(p, nn)
+
     while True:
 
-        for p in imgs:
-            pic = im.open(p).convert("LA")
-            pic.load()
-            Data = np.asarray(pic, dtype="float32")
-
-            pixels = []
-            for i in range(len(Data)):
-                for j in range(len(Data[i])):
-                    group = list(Data[i][j])
-                    # avg = (group[0] + group[1]) // len(group)
-
-                    pixels.append(group[0] / 255.0)
-
-            nn.setInput(pixels)
-            nn.feedForward()
-            v = nn.getResults()
-            print(str(v))
-            ans = np.argmax(v)
-
-            if ans == BALL:
-                print("BALL")
-            elif ans == LIGHTBULB:
-                print("LIGHTBULB")
-            elif ans == SUN:
-                print("SUN")
-
-            print("EXPECTED: " + p)
-
-            print("")
-
-        input("DONE")
-        break
+        imgName = input(
+            "please enter the file path of the formatted 28 by 28 pic: ")
+        testImage(imgName, nn)
 
 
-def train(data, goal, net, numEpochs=100):
+def train(data, goal, net, numEpochs=1):
     print("Starting to train...")
     prevE = 0
     i = 0
@@ -169,11 +160,11 @@ def train(data, goal, net, numEpochs=100):
             err += net.getError(goal[j])
 
         dE = err - prevE
-        print("\nEnd of epoch: " + str(i))
-        print("\nError: " + str(err))
-        print("Change in error: " + str(dE))
+        print("End of epoch: " + str(i))
+        print("Error: " + str(err))
+        print("Change in error: " + str(dE) + "\n")
 
-        if(err <= 1500):
+        if err < 200:
             break
 
         if dE >= 100:
@@ -184,7 +175,7 @@ def train(data, goal, net, numEpochs=100):
         i += 1
 
     # if err <= 1:
-    print("Done Training")
+    print("Done training\n")
     # break
     """
 
@@ -195,7 +186,7 @@ def test(data, goal, net):
     """ Test the model. """
 
     correct = 0
-    print("Testing!")
+    print("Testing...")
     for i in range(len(data)):
         net.setInput(data[i][:-1])  # everything except label
         net.feedForward()
@@ -204,7 +195,29 @@ def test(data, goal, net):
         if(answer == classification):
             correct += 1
 
-    print("\n" + str(correct * 100.0 / len(data)) + " %")
+    print("Score: " + str(correct * 100.0 / len(data)) + " %\n")
+
+
+def testImage(img, nn):
+    if ".png" in img:
+        pic = image.imread(img)
+
+        pixels = pic.reshape(int(28 * 28), 1)
+
+        nn.setInput(pixels)
+        nn.feedForward()
+        v = nn.getResults()
+        print(str(v))
+        ans = np.argmax(v)
+
+        if ans == BALL:
+            print("BALL")
+        elif ans == LIGHTBULB:
+            print("LIGHTBULB")
+        elif ans == SUN:
+            print("SUN")
+
+        print("EXPECTED: " + img + "\n")
 
 
 if __name__ == "__main__":
