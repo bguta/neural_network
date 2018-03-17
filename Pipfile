@@ -9,6 +9,9 @@ name = "pypi"
 
 numpy = "*"
 "h5py" = "*"
+matplotlib = "*"
+pytest = "*"
+pillow = "*"
 
 
 [dev-packages]

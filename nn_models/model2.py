@@ -162,7 +162,8 @@ class Network:
             "layer rather it is " + str(len(inputs)))
 
         # set the inputs
-        this.network[0][:, 0] = inputs  # assign the input layer the inputs
+        # assign the input layer the inputs
+        this.network[0][:, 0] = list(inputs)
 
     def getError(this, goal):
         '''
