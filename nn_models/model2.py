@@ -76,16 +76,13 @@ class Network:
 
 
         """
+        sig = np.vectorize(sigmoid)  # make the sigmoid a vector function
         # set the output for every layer other than the input
         for i in range(1, len(this.network)):
             # the weight from the previous layer to this layer, the output of
             # the previous layer and the bias that is points from the
             # previous layer to this layer
-            """
 
-            print(i)
-            print(str(this.network[i - 1].shape))
-            """
             out = np.add(np.dot(this.weights[i - 1], this.network[i - 1]),
                          this.bias[i - 1])
             # run the activation function
@@ -104,8 +101,8 @@ class Network:
         it also changes the bias based on the outputs
 
         equations:
-        gradient = eta * Error * prev_dOutput
-        dWeight = gradient (dot) transpose(prev_output)
+        gradient = eta * Error * deriv_prev_Output
+        dWeight = gradient (dot) transpose(this_output)
         dBias = gradient
         """
         g = np.zeros(this.network[-1].shape)
@@ -120,6 +117,8 @@ class Network:
         restLayers = this.network[:-1]
         errs = []
         errs.append(this.Error)
+
+        sig = np.vectorize(sigmoid)  # vectorize the sigmoid
 
         i = len(this.weights) - 1  # start with the last layer
         for layer in restLayers[::-1]:  # reverse the array to go backwards
