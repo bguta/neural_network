@@ -53,7 +53,7 @@ class Network:
         # for each layer that is not an input
         for i in range(1, len(this.network)):
             # add a column vector of 1.0
-            this.bias.append(np.ones((this.network[i].size, 1)))
+            this.bias.append(np.ones(this.network[i].shape))
 
         # this list contains a set of lists such that each index i contains the
         # weight for the (i) -> (i +1) in the list this.network
@@ -87,7 +87,7 @@ class Network:
                          this.bias[i - 1])
             # run the activation function
 
-            this.network[i][:, 0] = [sigmoid(x) for x in out]
+            this.network[i][:, 0] = sig(out)[:, 0]
 
     def backPropagate(this, goal):
         """
@@ -127,8 +127,7 @@ class Network:
             layer_error = np.dot(np.transpose(this.weights[i]), prevError)
 
             dPrev = np.zeros(this.network[i + 1].shape)
-            dPrev[:, 0] = [sigmoid(x, derivitave=True)
-                           for x in this.network[i + 1]]
+            dPrev[:, 0] = sig(this.network[i + 1], derivitave=True)[:, 0]
 
             # calc the cahnge in weights
             gradients = np.multiply(
@@ -229,4 +228,4 @@ def sigmoid(x, derivitave=False):     # the activation function
     if(x > 1000):    # Really big
         return 1.0
 
-    return 1 / (1 + np.exp(x * -1.0))
+    return 1 / (1 + mt.exp(x * -1.0))

@@ -7,14 +7,15 @@ from nn_models import model2 as md
 import time
 
 inputSize = 28 * 28  # the pixels space
-outputSize = 3  # the number of choices for objects
+outputSize = 5  # the number of choices for objects
 
 # labels for the data
 BALL = 0
 LIGHTBULB = 1
 SUN = 2
+CLOUD = 3
+EYE = 4
 
-useBigData = True
 
 imgs = [
     "../data/sun.png",
@@ -23,7 +24,7 @@ imgs = [
     "../data/basketball.png"]
 
 
-def makeData(test=False):
+def makeData(test=False, useBigData=False):
     """ Make the data and return a dict that contains the data and goal."""
 
     print("Importing Data...")
@@ -33,16 +34,28 @@ def makeData(test=False):
         Ball = np.load("../data/basketballtrain.npy")
         LightBulb = np.load("../data/light_bulbtrain.npy")
         Sun = np.load("../data/suntrain.npy")
-        tBall = np.load("../data/basketballtest.npy")
-        tLightBulb = np.load("../data/light_bulbtest.npy")
-        tSun = np.load("../data/suntest.npy")
+        Cloud = np.load("../data/cloudtrain.npy")
+        Eye = np.load("../data/eyetrain.npy")
+
+        if test:  # load the tests
+            tBall = np.load("../data/basketballtest.npy")
+            tLightBulb = np.load("../data/light_bulbtest.npy")
+            tSun = np.load("../data/suntest.npy")
+            tCloud = np.load("../data/cloudtest.npy")
+            tEye = np.load("../data/eyetest.npy")
     else:
         Ball = np.load("../data/sBasketball.npy")
         LightBulb = np.load("../data/sLight_bulb.npy")
         Sun = np.load("../data/sSun.npy")
-        tBall = np.load("../data/sBall_test.npy")
-        tLightBulb = np.load("../data/sLight_bulb_test.npy")
-        tSun = np.load("../data/sSun_test.npy")
+        Cloud = np.load("../data/sCloud_train.npy")
+        Eye = np.load("../data/sEye_train.npy")
+
+        if test:  # load the test
+            tBall = np.load("../data/sBall_test.npy")
+            tLightBulb = np.load("../data/sLight_bulb_test.npy")
+            tSun = np.load("../data/sSun_test.npy")
+            tCloud = np.load("../data/sCloud_test.npy")
+            tEye = np.load("../data/sEye_test.npy")
 
     data = []
     tData = []  # for the test
@@ -57,9 +70,18 @@ def makeData(test=False):
         for i in range(len(tLightBulb)):
             tData.append(list(tLightBulb[i]))
             tData[-1].append(LIGHTBULB)  # add tjhe label to the end of the img
+
         for i in range(len(tSun)):
             tData.append(list(tSun[i]))
             tData[-1].append(SUN)  # add tjhe label to the end of the img
+
+        for i in range(len(tCloud)):
+            tData.append(list(tCloud[i]))
+            tData[-1].append(CLOUD)  # add tjhe label to the end of the img
+
+        for i in range(len(tEye)):
+            tData.append(list(tEye[i]))
+            tData[-1].append(EYE)  # add tjhe label to the end of the img
 
         random.shuffle(tData)
 
@@ -68,11 +90,15 @@ def makeData(test=False):
             OUTPUT = pic[-1]
 
             if OUTPUT == BALL:
-                tGoal.append([1.0, 0.0, 0.0])
+                tGoal.append([1.0, 0.0, 0.0, 0.0, 0.0])
             elif OUTPUT == LIGHTBULB:
-                tGoal.append([0.0, 1.0, 0.0])
+                tGoal.append([0.0, 1.0, 0.0, 0.0, 0.0])
             elif OUTPUT == SUN:
-                tGoal.append([0.0, 0.0, 1.0])
+                tGoal.append([0.0, 0.0, 1.0, 0.0, 0.0])
+            elif OUTPUT == CLOUD:
+                tGoal.append([0.0, 0.0, 0.0, 1.0, 0.0])
+            elif OUTPUT == EYE:
+                tGoal.append([0.0, 0.0, 0.0, 0.0, 1.0])
             else:
                 raise ValueError("We did not get a valid image label")
 
@@ -83,9 +109,18 @@ def makeData(test=False):
     for i in range(len(LightBulb)):
         data.append(list(LightBulb[i]))
         data[-1].append(LIGHTBULB)  # add tjhe label to the end of the img
+
     for i in range(len(Sun)):
         data.append(list(Sun[i]))
-        data[-1].append(SUN)  # add tjhe label to the end of the img
+        data[-1].append(SUN)  # add the label to the end of the img
+
+    for i in range(len(Cloud)):
+        data.append(list(Cloud[i]))
+        data[-1].append(CLOUD)  # add tjhe label to the end of the img
+
+    for i in range(len(Eye)):
+        data.append(list(Eye[i]))
+        data[-1].append(EYE)  # add tjhe label to the end of the img
 
     random.shuffle(data)
 
@@ -97,11 +132,15 @@ def makeData(test=False):
         OUTPUT = pic[-1]
 
         if OUTPUT == BALL:
-            goal.append([1.0, 0.0, 0.0])
+            goal.append([1.0, 0.0, 0.0, 0.0, 0.0])
         elif OUTPUT == LIGHTBULB:
-            goal.append([0.0, 1.0, 0.0])
+            goal.append([0.0, 1.0, 0.0, 0.0, 0.0])
         elif OUTPUT == SUN:
-            goal.append([0.0, 0.0, 1.0])
+            goal.append([0.0, 0.0, 1.0, 0.0, 0.0])
+        elif OUTPUT == CLOUD:
+            goal.append([0.0, 0.0, 0.0, 1.0, 0.0])
+        elif OUTPUT == EYE:
+            goal.append([0.0, 0.0, 0.0, 0.0, 1.0])
         else:
             raise ValueError("We did not get a valid image label")
 
@@ -112,9 +151,9 @@ def main():
     """ Make the doodle neural net."""
     t_in = time.time()
     # get the data
-    trainingSet = makeData(test=True)
+    trainingSet = makeData(test=True, useBigData=False)
 
-    composition = [inputSize, 70, 10, 10,
+    composition = [inputSize, 100,
                    outputSize]  # the network composition
 
     nn = md.Network(composition)
@@ -127,7 +166,8 @@ def main():
     test(trainingSet["tData"], trainingSet["tGoal"], nn)
 
     print("time: " + str(time.time() - t_in) + "s \n")
-
+    input()
+    """
     for p in imgs:
         testImage(p, nn)
 
@@ -136,6 +176,7 @@ def main():
         imgName = input(
             "please enter the file path of the formatted 28 by 28 pic: ")
         testImage(imgName, nn)
+    """
 
 
 def train(data, goal, net, numEpochs=1):
@@ -184,7 +225,6 @@ def train(data, goal, net, numEpochs=1):
 
 def test(data, goal, net):
     """ Test the model. """
-
     correct = 0
     print("Testing...")
     for i in range(len(data)):
@@ -216,6 +256,10 @@ def testImage(img, nn):
             print("LIGHTBULB")
         elif ans == SUN:
             print("SUN")
+        elif ans == CLOUD:
+            print("CLOUD")
+        elif ans == EYE:
+            print("EYE")
 
         print("EXPECTED: " + img + "\n")
 
