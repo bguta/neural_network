@@ -4,9 +4,9 @@ import PIL.ImageOps as imo
 import matplotlib.image as image
 from scipy.misc import imsave
 
-""" save a 28 by 28 doodle made in paint as a png in data/ then
+""" save a doodle made in paint as a png in data/ then
     run this on the image to format it. This overrides the image
-    so make sure to have a backup
+    so make sure to have a backup.
 """
 
 
@@ -14,6 +14,7 @@ def main():
     imName = input("Please enter the name of the image (ex: sun.png): ")
 
     im = Im.open(imName)
+    im = im.resize((28, 28), Im.ANTIALIAS)
 
     im = im.convert('L')
     im = imo.invert(im)

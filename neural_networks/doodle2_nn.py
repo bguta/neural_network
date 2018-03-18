@@ -18,10 +18,13 @@ EYE = 4
 
 
 imgs = [
-    "../data/sun.png",
-    "../data/bball.png",
-    "../data/LightBulb.png",
-    "../data/basketball.png"]
+    "../data/pics/sun.png",
+    "../data/pics/bball.png",
+    "../data/pics/LightBulb.png",
+    "../data/pics/basketball.png",
+    "../data/pics/cloud.png",
+    "../data/pics/eye.png"
+]
 
 
 def makeData(test=False, useBigData=False):
@@ -153,11 +156,11 @@ def main():
     # get the data
     trainingSet = makeData(test=True, useBigData=False)
 
-    composition = [inputSize, 100,
+    composition = [inputSize, 70, 10,
                    outputSize]  # the network composition
 
     nn = md.Network(composition)
-    nn.eta = 0.0001
+    nn.eta = 0.01
     print("LEARNING RATE: " + str(nn.eta) + "\n")
 
     # train the network
@@ -166,8 +169,8 @@ def main():
     test(trainingSet["tData"], trainingSet["tGoal"], nn)
 
     print("time: " + str(time.time() - t_in) + "s \n")
-    input()
-    """
+    print("\nTesting created images...")
+
     for p in imgs:
         testImage(p, nn)
 
@@ -176,10 +179,9 @@ def main():
         imgName = input(
             "please enter the file path of the formatted 28 by 28 pic: ")
         testImage(imgName, nn)
-    """
 
 
-def train(data, goal, net, numEpochs=1):
+def train(data, goal, net, numEpochs=10):
     print("Starting to train...")
     prevE = 0
     i = 0
@@ -261,7 +263,8 @@ def testImage(img, nn):
         elif ans == EYE:
             print("EYE")
 
-        print("EXPECTED: " + img + "\n")
+        label = img.split("/")[-1]
+        print("EXPECTED: " + label + "\n")
 
 
 if __name__ == "__main__":
