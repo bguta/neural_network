@@ -1,10 +1,13 @@
 import numpy as np
 import matplotlib.image as image
+import matplotlib.pyplot as plt
+import matplotlib.animation as animate
 import random
 import sys
-sys.path.append('../')
-from nn_models import model2 as md
-import time
+import math as mt
+sys.path.insert(0, "../")
+from nn_models import model2 as md  # noqa
+import time  # noqa
 
 inputSize = 28 * 28  # the pixels space
 outputSize = 5  # the number of choices for objects
@@ -19,7 +22,6 @@ EYE = 4
 
 imgs = [
     "../data/pics/sun.png",
-    "../data/pics/bball.png",
     "../data/pics/LightBulb.png",
     "../data/pics/basketball.png",
     "../data/pics/cloud.png",
@@ -160,12 +162,14 @@ def main():
                    outputSize]  # the network composition
 
     nn = md.Network(composition)
-    nn.eta = 0.01
+    nn.eta = 1
+    epcs = 10
+
     print("LEARNING RATE: " + str(nn.eta) + "\n")
 
     # train the network
     test(trainingSet["tData"], trainingSet["tGoal"], nn)
-    train(trainingSet["data"], trainingSet["goal"], nn)
+    train(trainingSet["data"], trainingSet["goal"], nn, numEpochs=epcs)
     test(trainingSet["tData"], trainingSet["tGoal"], nn)
 
     print("time: " + str(time.time() - t_in) + "s \n")
@@ -177,18 +181,38 @@ def main():
     while True:
 
         imgName = input(
-            "please enter the file path of the formatted 28 by 28 pic: ")
+            "please enter the file path of the png pic to test: ")
         testImage(imgName, nn)
+
+
+def addPoint(xs, ys, axis):
+    """
+    animate the plot of the error
+
+    @param xs a list of x points
+    @param ys a list of y points
+    @param axis i.e suplot
+    """
+    axis.plot(xs, ys, "ro")
 
 
 def train(data, goal, net, numEpochs=10):
     print("Starting to train...")
+
     prevE = 0
     i = 0
-    # while True:
 
-    # input("Enter q to quit else press c: ")
+    plt.ion()  # start the graph
+    fig = plt.figure()
+    axis = fig.add_subplot(1, 1, 1)
+    fig.suptitle('Error Plot')
+    plt.xlabel('Epoch Number')
+    plt.ylabel('Error')
+    xs, ys = [], []  # the points
+
     for epochs in range(numEpochs):
+        xs.append(epochs)
+
         err = 0  # the incured error
         print("Starting epoch " + str(i))
         for j in range(len(data)):
@@ -202,10 +226,19 @@ def train(data, goal, net, numEpochs=10):
 
             err += net.getError(goal[j])
 
-        dE = err - prevE
+        dE = err - prevE  # change in error
+
+        ys.append(err)  # the y point
+        animate.FuncAnimation(fig, addPoint(xs, ys, axis))
+        plt.show()
+        plt.pause(0.1)
+
         print("End of epoch: " + str(i))
         print("Error: " + str(err))
         print("Change in error: " + str(dE) + "\n")
+
+        net.eta = mt.exp(-(epochs + 1))
+        print("LEARNING RATE: " + str(net.eta) + "\n")
 
         if err < 200:
             break
