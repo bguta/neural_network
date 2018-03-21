@@ -1,6 +1,6 @@
 import sys
 sys.path.append('../')
-from nn_models import model2 as m2
+from nn_models import model2 as m2  # noqa
 
 
 '''
@@ -13,7 +13,7 @@ __author__ = Bereket Guta
 
 def main():
     # the makeup of the network
-    makeUp = [2, 100, 1]
+    makeUp = [2, 30, 10, 10, 1]
 
     # activate the network
     net = m2.Network(makeUp)

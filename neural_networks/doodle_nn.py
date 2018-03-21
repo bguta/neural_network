@@ -2,8 +2,8 @@
 import numpy as np
 import random
 import sys
-sys.path.append('../')
-from nn_models import model as md
+sys.path.insert(0, "../")
+from nn_models import model as md  # noqa
 
 
 inputSize = 28 * 28  # the pixels space

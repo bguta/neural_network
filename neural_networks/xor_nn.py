@@ -1,6 +1,6 @@
 import sys
-sys.path.append('../')
-from nn_models import model
+sys.path.insert(0, "../")
+from nn_models import model  # noqa
 
 
 '''
