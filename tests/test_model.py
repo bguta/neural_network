@@ -1,8 +1,10 @@
 
 
 import pytest
-import sys
 from nn_models import model
+
+
+""" Run with oython -m pytest"""
 
 
 class TestModel:
