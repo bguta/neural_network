@@ -3,12 +3,12 @@
 
 This is a simple model of a neural network. 
 
-I started with a model that mostly consisted of classes of objects that 
-represented neurons, connections as well as a Network. This model worked with small scale networks but failed with
+I started with a model that mostly consisted of objects that 
+represented neurons, connections as well as a Network. This model worked with small scale networks but failed with a
 larger number of layers/neurons. 
 
 Model 2 uses a less objects and more matrix calculations with the aid of the numpy package. This model works better
-on both small and larger number of layers when compared to model 1. However, it does still tend to run slow when there
+on both a small and larg number of layers when compared to model 1. However, it does still tend to run slow when there
 is a large number of neurons in a layer (~800). May need to consider using multi threading or a faster algorithm.
 
 ## Prereqs
