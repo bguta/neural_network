@@ -10,22 +10,81 @@ from nn_models import model2 as md  # noqa
 import time  # noqa
 
 inputSize = 28 * 28  # the pixels space
-outputSize = 5  # the number of choices for objects
+outputSize = 8  # the number of choices for objects
 
-# labels for the data
+# labels for the data : this order matters!!
 BALL = 0
 LIGHTBULB = 1
 SUN = 2
 CLOUD = 3
 EYE = 4
+BIKE = 5
+DOG = 6
+FLOWER = 7
+labels = ["ball", "lightbulb", "sun", "cloud", "eye", "bike", "dog", "flower"]
+
+answers = [
+    [1] + [0] * (outputSize - 1),
+    [0] * 1 + [1] + [0] * (outputSize - 2),
+    [0] * 2 + [1] + [0] * (outputSize - 3),
+    [0] * 3 + [1] + [0] * (outputSize - 4),
+    [0] * 4 + [1] + [0] * (outputSize - 5),
+    [0] * 5 + [1] + [0] * (outputSize - 6),
+    [0] * 6 + [1] + [0] * (outputSize - 7),
+    [0] * 7 + [1] + [0] * (outputSize - 8)
+]
 
 
 imgs = [
-    "../data/pics/sun.png",
-    "../data/pics/LightBulb.png",
     "../data/pics/basketball.png",
+    "../data/pics/LightBulb.png",
+    "../data/pics/sun.png",
     "../data/pics/cloud.png",
     "../data/pics/eye.png"
+]
+large_Data = [  # the large data; note the order, it is the same as above numbering
+    [
+        "../data/l/basketballtrain.npy",
+        "../data/l/light_bulbtrain.npy",
+        "../data/l/suntrain.npy",
+        "../data/l/cloudtrain.npy",
+        "../data/l/eyetrain.npy",
+        "../data/l/bicycletrain.npy",
+        "../data/l/dogtrain.npy",
+        "../data/l/flowertrain.npy"
+    ],
+    [
+        "../data/l/basketballtest.npy",
+        "../data/l/light_bulbtest.npy",
+        "../data/l/suntest.npy",
+        "../data/l/cloudtest.npy",
+        "../data/l/eyetest.npy",
+        "../data/l/bicycletest.npy",
+        "../data/l/dogtest.npy",
+        "../data/l/flowertest.npy"
+    ]
+]
+small_Data = [  # the small data set
+    [
+        "../data/s/sBallTrain.npy",
+        "../data/s/sLightbulbTrain.npy",
+        "../data/s/sSunTrain.npy",
+        "../data/s/sCloudTrain.npy",
+        "../data/s/sEyeTrain.npy",
+        "../data/s/sBicycleTrain.npy",
+        "../data/s/sDogTrain.npy",
+        "../data/s/sFlowerTrain.npy"
+    ],
+    [
+        "../data/s/sBallTest.npy",
+        "../data/s/sLightbulbTest.npy",
+        "../data/s/sSunTest.npy",
+        "../data/s/sCloudTest.npy",
+        "../data/s/sEyeTest.npy",
+        "../data/s/sBicycleTest.npy",
+        "../data/s/sDogTest.npy",
+        "../data/s/sFlowerTest.npy"
+    ]
 ]
 
 
@@ -33,34 +92,29 @@ def makeData(test=False, useBigData=False):
     """ Make the data and return a dict that contains the data and goal."""
 
     print("Importing Data...")
+    dTrain = []
+    dTest = []
 
     # open the files, I already made them smaller; they contain 3000 pics each
     if useBigData:
-        Ball = np.load("../data/basketballtrain.npy")
-        LightBulb = np.load("../data/light_bulbtrain.npy")
-        Sun = np.load("../data/suntrain.npy")
-        Cloud = np.load("../data/cloudtrain.npy")
-        Eye = np.load("../data/eyetrain.npy")
+        for i in range(len(large_Data[0])):
+            val = np.load(large_Data[0][i])
+            dTrain.append(val)
 
         if test:  # load the tests
-            tBall = np.load("../data/basketballtest.npy")
-            tLightBulb = np.load("../data/light_bulbtest.npy")
-            tSun = np.load("../data/suntest.npy")
-            tCloud = np.load("../data/cloudtest.npy")
-            tEye = np.load("../data/eyetest.npy")
+            for i in range(len(large_Data[1])):
+                val = np.load(large_Data[1][i])
+                dTest.append(val)
     else:
-        Ball = np.load("../data/sBasketball.npy")
-        LightBulb = np.load("../data/sLight_bulb.npy")
-        Sun = np.load("../data/sSun.npy")
-        Cloud = np.load("../data/sCloud_train.npy")
-        Eye = np.load("../data/sEye_train.npy")
+        for i in range(len(small_Data[0])):
+            val = np.load(small_Data[0][i])
+            dTrain.append(val)
 
         if test:  # load the test
-            tBall = np.load("../data/sBall_test.npy")
-            tLightBulb = np.load("../data/sLight_bulb_test.npy")
-            tSun = np.load("../data/sSun_test.npy")
-            tCloud = np.load("../data/sCloud_test.npy")
-            tEye = np.load("../data/sEye_test.npy")
+
+            for i in range(len(small_Data[1])):
+                val = np.load(small_Data[1][i])
+                dTest.append(val)
 
     data = []
     tData = []  # for the test
@@ -68,25 +122,11 @@ def makeData(test=False, useBigData=False):
     tGoal = []  # for the test
 
     if test:
-        for i in range(len(tBall)):
-            tData.append(list(tBall[i]))
-            tData[-1].append(BALL)  # add tjhe label to the end of the img
-
-        for i in range(len(tLightBulb)):
-            tData.append(list(tLightBulb[i]))
-            tData[-1].append(LIGHTBULB)  # add tjhe label to the end of the img
-
-        for i in range(len(tSun)):
-            tData.append(list(tSun[i]))
-            tData[-1].append(SUN)  # add tjhe label to the end of the img
-
-        for i in range(len(tCloud)):
-            tData.append(list(tCloud[i]))
-            tData[-1].append(CLOUD)  # add tjhe label to the end of the img
-
-        for i in range(len(tEye)):
-            tData.append(list(tEye[i]))
-            tData[-1].append(EYE)  # add tjhe label to the end of the img
+        for i in range(len(dTest)):
+            for vct in dTest[i]:
+                vct = np.append(vct, i)  # input the label
+                vec = vct.reshape(inputSize + 1, 1)
+                tData.append(vec)
 
         random.shuffle(tData)
 
@@ -94,38 +134,16 @@ def makeData(test=False, useBigData=False):
             # the last index tells us what the image is i.e the label
             OUTPUT = pic[-1]
 
-            if OUTPUT == BALL:
-                tGoal.append([1.0, 0.0, 0.0, 0.0, 0.0])
-            elif OUTPUT == LIGHTBULB:
-                tGoal.append([0.0, 1.0, 0.0, 0.0, 0.0])
-            elif OUTPUT == SUN:
-                tGoal.append([0.0, 0.0, 1.0, 0.0, 0.0])
-            elif OUTPUT == CLOUD:
-                tGoal.append([0.0, 0.0, 0.0, 1.0, 0.0])
-            elif OUTPUT == EYE:
-                tGoal.append([0.0, 0.0, 0.0, 0.0, 1.0])
-            else:
-                raise ValueError("We did not get a valid image label")
+            assert OUTPUT < outputSize
+            assert OUTPUT >= 0
 
-    for i in range(len(Ball)):
-        data.append(list(Ball[i]))
-        data[-1].append(BALL)  # add tjhe label to the end of the img
+            tGoal.append(answers[int(OUTPUT)])
 
-    for i in range(len(LightBulb)):
-        data.append(list(LightBulb[i]))
-        data[-1].append(LIGHTBULB)  # add tjhe label to the end of the img
-
-    for i in range(len(Sun)):
-        data.append(list(Sun[i]))
-        data[-1].append(SUN)  # add the label to the end of the img
-
-    for i in range(len(Cloud)):
-        data.append(list(Cloud[i]))
-        data[-1].append(CLOUD)  # add tjhe label to the end of the img
-
-    for i in range(len(Eye)):
-        data.append(list(Eye[i]))
-        data[-1].append(EYE)  # add tjhe label to the end of the img
+    for i in range(len(dTrain)):
+        for vct in dTrain[i]:
+            vct = np.append(vct, i)
+            vec = vct.reshape(inputSize + 1, 1)
+            data.append(vec)
 
     random.shuffle(data)
 
@@ -136,18 +154,10 @@ def makeData(test=False, useBigData=False):
         # the last index tells us what the image is i.e the label
         OUTPUT = pic[-1]
 
-        if OUTPUT == BALL:
-            goal.append([1.0, 0.0, 0.0, 0.0, 0.0])
-        elif OUTPUT == LIGHTBULB:
-            goal.append([0.0, 1.0, 0.0, 0.0, 0.0])
-        elif OUTPUT == SUN:
-            goal.append([0.0, 0.0, 1.0, 0.0, 0.0])
-        elif OUTPUT == CLOUD:
-            goal.append([0.0, 0.0, 0.0, 1.0, 0.0])
-        elif OUTPUT == EYE:
-            goal.append([0.0, 0.0, 0.0, 0.0, 1.0])
-        else:
-            raise ValueError("We did not get a valid image label")
+        assert OUTPUT < outputSize
+        assert OUTPUT >= 0
+
+        goal.append(answers[int(OUTPUT)])
 
     return {"data": data, "goal": goal, "tData": tData, "tGoal": tGoal}
 
@@ -156,14 +166,14 @@ def main():
     """ Make the doodle neural net."""
     t_in = time.time()
     # get the data
-    trainingSet = makeData(test=True, useBigData=False)
+    trainingSet = makeData(test=True, useBigData=True)
 
-    composition = [inputSize, 70, 10,
+    composition = [inputSize, 100, 10,
                    outputSize]  # the network composition
 
     nn = md.Network(composition)
-    nn.eta = 1
-    epcs = 10
+    nn.eta = 0.001
+    epcs = 5
 
     print("LEARNING RATE: " + str(nn.eta) + "\n")
 
@@ -181,7 +191,9 @@ def main():
     while True:
 
         imgName = input(
-            "please enter the file path of the png pic to test: ")
+            "please enter the file path of the png pic to test (enter q to quit): ")
+        if imgName == "q":
+            break
         testImage(imgName, nn)
 
 
@@ -196,7 +208,7 @@ def addPoint(xs, ys, axis):
     axis.plot(xs, ys, "ro")
 
 
-def train(data, goal, net, numEpochs=10):
+def train(data, goal, net, numEpochs=100):
     print("Starting to train...")
 
     prevE = 0
@@ -216,6 +228,7 @@ def train(data, goal, net, numEpochs=10):
         err = 0  # the incured error
         print("Starting epoch " + str(i))
         for j in range(len(data)):
+            """
             net.setInput(data[j][:-1])  # everythin except the label
 
             # feed it through
@@ -223,13 +236,13 @@ def train(data, goal, net, numEpochs=10):
 
             # goal is pushed into the outputs neurons
             net.backPropagate(goal[j])
-
-            err += net.getError(goal[j])
+            """
+            err += net.train(data[j][:-1], goal[j])
 
         dE = err - prevE  # change in error
 
         ys.append(err)  # the y point
-        animate.FuncAnimation(fig, addPoint(xs, ys, axis))
+        animate.FuncAnimation(fig, addPoint(xs, ys, axis))  # draw the graph
         plt.show()
         plt.pause(0.1)
 
@@ -237,7 +250,7 @@ def train(data, goal, net, numEpochs=10):
         print("Error: " + str(err))
         print("Change in error: " + str(dE) + "\n")
 
-        net.eta = mt.exp(-(epochs + 1))
+        # net.eta = mt.exp(-(epochs + 1))
         print("LEARNING RATE: " + str(net.eta) + "\n")
 
         if err < 200:
@@ -263,9 +276,11 @@ def test(data, goal, net):
     correct = 0
     print("Testing...")
     for i in range(len(data)):
+        """
         net.setInput(data[i][:-1])  # everything except label
         net.feedForward()
-        classification = np.argmax(net.getResults())
+        """
+        classification = np.argmax(net.test(data[i][:-1]))
         answer = np.argmax(goal[i])
         if(answer == classification):
             correct += 1
@@ -285,19 +300,8 @@ def testImage(img, nn):
         print(str(v))
         ans = np.argmax(v)
 
-        if ans == BALL:
-            print("BALL")
-        elif ans == LIGHTBULB:
-            print("LIGHTBULB")
-        elif ans == SUN:
-            print("SUN")
-        elif ans == CLOUD:
-            print("CLOUD")
-        elif ans == EYE:
-            print("EYE")
-
         label = img.split("/")[-1]
-        print("EXPECTED: " + label + "\n")
+        print(labels[ans] + " ; EXPECTED " + label + "\n")
 
 
 if __name__ == "__main__":
