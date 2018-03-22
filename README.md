@@ -1,4 +1,5 @@
 [![Build Status](https://travis-ci.org/bguta/neural_network.svg?branch=master)](https://travis-ci.org/bguta/neural_network)
+
 # Neural Network
 
 This is a simple model of a neural network. 
@@ -32,5 +33,12 @@ Run xor_nn.py to see an example or create your own code using the xor network as
 ## Testing
 
 Currently testing the models. Model 2 is currently the best, but I still need to check it throughly for bugs
+
+## Images
+![preview](data/pics/cloud.png) 
+![preview](data/pics/basketball.png) 
+![preview](data/pics/LightBulb.png) 
+![preview](data/pics/eye.png)
+![preview](data/pics/sun.png)
 
 
