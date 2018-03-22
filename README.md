@@ -1,4 +1,4 @@
-[![Build Status](https://travis-ci.org/bguta/neural_network.svg?branch=master)](https://travis-ci.org/bguta/neural_network)
+[![Build Status](https://travis-ci.org/bguta/neural_network.svg?branch=master)](https://travis-ci.org/bguta/neural_network).
 ![preview](data/pics/cloud.png)
 # Neural Network
 
