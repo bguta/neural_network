@@ -217,6 +217,49 @@ class Network:
 
         return list(output)
 
+    def train(this, inputs, output):
+        """
+        Trains the model by inputing the inputs and feeding forward and back propagating and
+        then returns the error of this forward and backward iteration.
+
+        @param inputs
+        a list of numbers that correspond to the input for each input neurons.
+        must have the same length as the number of neurons in the input layer
+        i.e the number passed in topology
+
+        @param output
+        a list of numbers that represent the desired output
+
+
+        @returns
+        the err of the network calculated using rms of all the
+        output neuron errors
+
+        """
+        this.setInput(inputs)
+        this.feedForward()
+        this.backPropagate(output)
+        return this.getError(output)
+
+    def test(this, inputs):
+        """
+        Test the model with a given input. This returns the output of the network given
+        this input
+
+
+        @param inputs
+        a list of numbers that correspond to the input for each input neurons.
+        must have the same length as the number of neurons in the input layer
+        i.e the number passed in topology
+
+        @returns
+        the output of the network
+
+        """
+        this.setInput(inputs)
+        this.feedForward()
+        return this.getResults()
+
 
 def sigmoid(x, derivitave=False):     # the activation function
     if(derivitave):
