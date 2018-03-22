@@ -1,4 +1,5 @@
 [![Build Status](https://travis-ci.org/bguta/neural_network.svg?branch=master)](https://travis-ci.org/bguta/neural_network)
+![preview](data/pics/cloud.png)
 # Neural Network
 
 This is a simple model of a neural network. 
