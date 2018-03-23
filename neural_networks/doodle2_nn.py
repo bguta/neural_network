@@ -5,6 +5,7 @@ import matplotlib.animation as animate
 import random
 import sys
 import math as mt
+from functools import reduce
 sys.path.insert(0, "../")
 from nn_models import model2 as md  # noqa
 import time  # noqa
@@ -40,7 +41,10 @@ imgs = [
     "../data/pics/LightBulb.png",
     "../data/pics/sun.png",
     "../data/pics/cloud.png",
-    "../data/pics/eye.png"
+    "../data/pics/eye.png",
+    "../data/pics/bike.png",
+    "../data/pics/dog.png",
+    "../data/pics/flower.png"
 ]
 large_Data = [  # the large data; note the order, it is the same as above numbering
     [
@@ -116,6 +120,13 @@ def makeData(test=False, useBigData=False):
                 val = np.load(small_Data[1][i])
                 dTest.append(val)
 
+    size = reduce(lambda x, y: x + len(y), dTrain, 0)
+    print(str(size) + " Training images")
+    temp = size
+    size += reduce(lambda x, y: x + len(y), dTest, 0)
+    print(str(size - temp) + " Testing images")
+    print(str(size) + " Total images")
+
     data = []
     tData = []  # for the test
     goal = []  # desired output for each pic
@@ -166,25 +177,33 @@ def main():
     """ Make the doodle neural net."""
     t_in = time.time()
     # get the data
-    trainingSet = makeData(test=True, useBigData=True)
+    trainingSet = makeData(test=True, useBigData=False)
+    print("Time to load data (sec): " + str(time.time() - t_in))
 
     composition = [inputSize, 100, 10,
                    outputSize]  # the network composition
 
     nn = md.Network(composition)
-    nn.eta = 0.001
-    epcs = 5
+    nn.eta = 10
+    epcs = 10
 
     print("LEARNING RATE: " + str(nn.eta) + "\n")
 
+    # do a pre test for the network
+    t_in = time.time()
+    test(trainingSet["tData"], trainingSet["tGoal"], nn)
+    print("Time to test network (sec): " + str(time.time() - t_in) + "\n")
+
     # train the network
-    test(trainingSet["tData"], trainingSet["tGoal"], nn)
+    t_in = time.time()
     train(trainingSet["data"], trainingSet["goal"], nn, numEpochs=epcs)
+    print("Time to train network (sec): " + str(time.time() - t_in))
+
+    # test again
     test(trainingSet["tData"], trainingSet["tGoal"], nn)
 
-    print("time: " + str(time.time() - t_in) + "s \n")
     print("\nTesting created images...")
-
+    print("labels: " + str(labels) + "\n")
     for p in imgs:
         testImage(p, nn)
 
@@ -197,31 +216,34 @@ def main():
         testImage(imgName, nn)
 
 
-def addPoint(xs, ys, axis):
-    """
-    animate the plot of the error
-
-    @param xs a list of x points
-    @param ys a list of y points
-    @param axis i.e suplot
-    """
-    axis.plot(xs, ys, "ro")
-
-
 def train(data, goal, net, numEpochs=100):
     print("Starting to train...")
 
     prevE = 0
     i = 0
 
-    plt.ion()  # start the graph
+    # plt.ion()  # start the graph
+    """
     fig = plt.figure()
     axis = fig.add_subplot(1, 1, 1)
     fig.suptitle('Error Plot')
     plt.xlabel('Epoch Number')
     plt.ylabel('Error')
-    xs, ys = [], []  # the points
+    """
+    fig, (ax1, ax2) = plt.subplots(2, 1, sharex=True)
+    fig.set_size_inches(10, 10)
+    ax1.set_title("RMS Error")
+    ax1.set(ylabel="Error")
+    ax2.set_title("Learning Rate")
+    ax2.set(ylabel="Rate")
+    plt.xlabel("Epoch number")
+    plt.tight_layout()
+    # plt.draw()
+    animate.FuncAnimation(fig, addPoint)  # animate the function
 
+    xs, y1 = [], []  # the points
+    y2 = []
+    decay = net.eta / numEpochs
     for epochs in range(numEpochs):
         xs.append(epochs)
 
@@ -241,23 +263,24 @@ def train(data, goal, net, numEpochs=100):
 
         dE = err - prevE  # change in error
 
-        ys.append(err)  # the y point
-        animate.FuncAnimation(fig, addPoint(xs, ys, axis))  # draw the graph
-        plt.show()
-        plt.pause(0.1)
+        y1.append(err)  # the y point
+        y2.append(net.eta)
+        addPoint(xs, y1, ax1)
+        addPoint(xs, y2, ax2, colour="b")
+        plt.draw()
+        plt.pause(0.01)
 
         print("End of epoch: " + str(i))
         print("Error: " + str(err))
         print("Change in error: " + str(dE) + "\n")
 
-        # net.eta = mt.exp(-(epochs + 1))
-        print("LEARNING RATE: " + str(net.eta) + "\n")
+        changeLearningRate(net, epochs, decay)  # change the learning rate
 
-        if err < 200:
+        if err <= 200:
             break
 
-        if dE >= 100:
-            pass
+        if dE == 0:
+            break
             # net.eta = net.eta = random.uniform(0.000001, net.eta)
             # print("LEARNING RATE: " + str(net.eta) + "\n")
         prevE = err
@@ -276,6 +299,7 @@ def test(data, goal, net):
     correct = 0
     print("Testing...")
     for i in range(len(data)):
+
         """
         net.setInput(data[i][:-1])  # everything except label
         net.feedForward()
@@ -290,18 +314,53 @@ def test(data, goal, net):
 
 def testImage(img, nn):
     if ".png" in img:
-        pic = image.imread(img)
+        try:
+            pic = image.imread(img)
+            image.imread
 
-        pixels = pic.reshape(int(28 * 28), 1)
+            pixels = pic.reshape(int(28 * 28), 1)
 
-        nn.setInput(pixels)
-        nn.feedForward()
-        v = nn.getResults()
-        print(str(v))
-        ans = np.argmax(v)
+            nn.setInput(pixels)
+            nn.feedForward()
+            v = nn.getResults()
+            # print(str(v))
+            ans = np.argmax(v)
 
-        label = img.split("/")[-1]
-        print(labels[ans] + " ; EXPECTED " + label + "\n")
+            label = img.split("/")[-1]
+            print(labels[ans] + " " + str(v[ans]) +
+                  " : EXPECTED " + label + "\n")
+        except Exception as e:
+            print(e)
+            pass
+
+
+def addPoint(xs, ys, axis, colour="r"):
+    """
+    animate the plot of the error
+
+    @param xs a list of x points
+    @param ys a list of y points
+    @param axis i.e suplot
+    """
+    axis.plot(xs, ys, colour + "o")
+    return True
+
+
+def changeLearningRate(net, epoch, decay):
+    """
+    @param net
+    the neural network
+
+    @param epochs
+    the epoch number that training is being run for
+
+    @param decay
+    the decay calculated as the original lr devided by the total epochs
+
+    @changes
+    the learning rate
+    """
+    net.eta = net.eta * 1 / (1 + decay * epoch)
 
 
 if __name__ == "__main__":
