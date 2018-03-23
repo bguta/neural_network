@@ -60,8 +60,14 @@ class Network:
         this.weights = []
         # setupt the weight matrix randomly
         for i in range(1, len(this.network)):
+            # random method
+            """
             this.weights.append(np.random.randn(this.network[i].size,
                                                 this.network[i - 1].size))
+            """
+            # xavier method
+            this.weights.append(np.random.uniform(-4 * mt.sqrt(6 / (this.network[i].size + this.network[i - 1].size)),
+                                                  4 * mt.sqrt(6 / (this.network[i].size + this.network[i - 1].size)), (this.network[i].size, this.network[i - 1].size)))
 
     # propagation
     def feedForward(this):
@@ -186,7 +192,7 @@ class Network:
         for i in range(len(goal)):
                 # find the difference between the output and the goal neuron
             e = (goal[i] - this.network[-1][i])
-            err += e ** 2  # add the error squared to the sum
+            err += (e ** 2) / 2  # add the error squared to the sum
 
         err /= len(goal)
         err = mt.sqrt(err)
