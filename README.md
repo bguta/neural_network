@@ -40,5 +40,8 @@ Currently testing the models. Model 2 is currently the best, but I still need to
 ![preview](data/pics/LightBulb.png) 
 ![preview](data/pics/eye.png)
 ![preview](data/pics/sun.png)
+![preview](data/pics/dog.png)
+![preview](data/pics/bike.png)
+![preview](data/pics/flower.png)
 
 
