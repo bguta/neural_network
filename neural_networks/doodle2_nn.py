@@ -119,13 +119,14 @@ def makeData(test=False, useBigData=False):
             for i in range(len(small_Data[1])):
                 val = np.load(small_Data[1][i])
                 dTest.append(val)
-
+    """
     size = reduce(lambda x, y: x + len(y), dTrain, 0)
     print(str(size) + " Training images")
     temp = size
     size += reduce(lambda x, y: x + len(y), dTest, 0)
     print(str(size - temp) + " Testing images")
     print(str(size) + " Total images")
+    """
 
     data = []
     tData = []  # for the test
@@ -175,19 +176,19 @@ def makeData(test=False, useBigData=False):
 
 def main():
     """ Make the doodle neural net."""
-    t_in = time.time()
+    #t_in = time.time()
     # get the data
-    trainingSet = makeData(test=True, useBigData=False)
-    print("Time to load data (sec): " + str(time.time() - t_in))
+    trainingSet = makeData(test=True, useBigData=True)
+    #print("Time to load data (sec): " + str(time.time() - t_in))
 
     composition = [inputSize, 100, 10,
                    outputSize]  # the network composition
 
     nn = md.Network(composition)
     nn.eta = 10
-    epcs = 10
+    epcs = 1
 
-    print("LEARNING RATE: " + str(nn.eta) + "\n")
+    #print("LEARNING RATE: " + str(nn.eta) + "\n")
 
     # do a pre test for the network
     t_in = time.time()
@@ -196,14 +197,15 @@ def main():
 
     # train the network
     t_in = time.time()
-    train(trainingSet["data"], trainingSet["goal"], nn, numEpochs=epcs)
+    train(trainingSet["data"], trainingSet["goal"], nn, numEpochs=epcs,
+          plot=False)
     print("Time to train network (sec): " + str(time.time() - t_in))
 
     # test again
     test(trainingSet["tData"], trainingSet["tGoal"], nn)
 
-    print("\nTesting created images...")
-    print("labels: " + str(labels) + "\n")
+    #print("\nTesting created images...")
+    #print("labels: " + str(labels) + "\n")
     for p in imgs:
         testImage(p, nn)
 
@@ -216,7 +218,7 @@ def main():
         testImage(imgName, nn)
 
 
-def train(data, goal, net, numEpochs=100):
+def train(data, goal, net, numEpochs=100, plot=True):
     print("Starting to train...")
 
     prevE = 0
@@ -230,16 +232,17 @@ def train(data, goal, net, numEpochs=100):
     plt.xlabel('Epoch Number')
     plt.ylabel('Error')
     """
-    fig, (ax1, ax2) = plt.subplots(2, 1, sharex=True)
-    fig.set_size_inches(10, 10)
-    ax1.set_title("RMS Error")
-    ax1.set(ylabel="Error")
-    ax2.set_title("Learning Rate")
-    ax2.set(ylabel="Rate")
-    plt.xlabel("Epoch number")
-    plt.tight_layout()
-    # plt.draw()
-    animate.FuncAnimation(fig, addPoint)  # animate the function
+    if plot:
+        fig, (ax1, ax2) = plt.subplots(2, 1, sharex=True)
+        fig.set_size_inches(10, 10)
+        ax1.set_title("RMS Error")
+        ax1.set(ylabel="Error")
+        ax2.set_title("Learning Rate")
+        ax2.set(ylabel="Rate")
+        plt.xlabel("Epoch number")
+        plt.tight_layout()
+        # plt.draw()
+        animate.FuncAnimation(fig, addPoint)  # animate the function
 
     xs, y1 = [], []  # the points
     y2 = []
@@ -248,7 +251,8 @@ def train(data, goal, net, numEpochs=100):
         xs.append(epochs)
 
         err = 0  # the incured error
-        print("Starting epoch " + str(i))
+        te_in = time.time()
+        #print("Starting epoch " + str(i))
         for j in range(len(data)):
             """
             net.setInput(data[j][:-1])  # everythin except the label
@@ -262,17 +266,20 @@ def train(data, goal, net, numEpochs=100):
             err += net.train(data[j][:-1], goal[j])
 
         dE = err - prevE  # change in error
+        print("Time to go through epoch #" + str(i) +
+              " (sec): " + str(time.time() - te_in))
 
-        y1.append(err)  # the y point
-        y2.append(net.eta)
-        addPoint(xs, y1, ax1)
-        addPoint(xs, y2, ax2, colour="b")
-        plt.draw()
-        plt.pause(0.01)
+        if plot:
+            y1.append(err)  # the y point
+            y2.append(net.eta)
+            addPoint(xs, y1, ax1)
+            addPoint(xs, y2, ax2, colour="b")
+            plt.draw()
+            plt.pause(0.0001)
 
-        print("End of epoch: " + str(i))
-        print("Error: " + str(err))
-        print("Change in error: " + str(dE) + "\n")
+        #print("End of epoch: " + str(i))
+        #print("Error: " + str(err))
+        #print("Change in error: " + str(dE) + "\n")
 
         changeLearningRate(net, epochs, decay)  # change the learning rate
 
@@ -282,12 +289,12 @@ def train(data, goal, net, numEpochs=100):
         if dE == 0:
             break
             # net.eta = net.eta = random.uniform(0.000001, net.eta)
-            # print("LEARNING RATE: " + str(net.eta) + "\n")
+        #print("LEARNING RATE: " + str(net.eta) + "\n")
         prevE = err
         i += 1
 
     # if err <= 1:
-    print("Done training\n")
+    #print("Done training\n")
     # break
     """
 
