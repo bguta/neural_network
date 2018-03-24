@@ -1,5 +1,6 @@
 import numpy as np
 import math as mt
+from numba import jit, vectorize, float64, boolean
 
 """
 This is an implementation of a neural network using mostly numpy
@@ -37,23 +38,25 @@ class Network:
         # bias[i] is the bias for network[i+1] i.e the layer it points to
         this.bias = []
 
-        this.inputL = np.zeros((topology[0], 1))  # create an input vector
+        # create an input vector
+        this.inputL = np.zeros((topology[0], 1), dtype="float64")
 
         this.network.append(this.inputL)
 
-        this.outputL = np.zeros((topology[-1], 1))  # the output vecotr layer
+        # the output vecotr layer
+        this.outputL = np.zeros((topology[-1], 1), dtype="float64")
 
         # set up the list of hidden layers and import them into the network
         for hl in range(1, len(topology) - 1):
             # the hidden layer vectors
-            this.network.append(np.zeros((topology[hl], 1)))
+            this.network.append(np.zeros((topology[hl], 1), dtype="float64"))
 
         this.network.append(this.outputL)  # add the output
 
         # for each layer that is not an input
         for i in range(1, len(this.network)):
             # add a column vector of 1.0
-            this.bias.append(np.ones(this.network[i].shape))
+            this.bias.append(np.ones(this.network[i].shape, dtype="float64"))
 
         # this list contains a set of lists such that each index i contains the
         # weight for the (i) -> (i +1) in the list this.network
@@ -82,18 +85,23 @@ class Network:
 
 
         """
-        sig = np.vectorize(sigmoid)  # make the sigmoid a vector function
+        # sig = np.vectorize(sigmoid)  # make the sigmoid a vector function
         # set the output for every layer other than the input
         for i in range(1, len(this.network)):
             # the weight from the previous layer to this layer, the output of
             # the previous layer and the bias that is points from the
             # previous layer to this layer
+            outp = np.array(this.network[i])
+            np.dot(this.weights[i - 1], this.network[i - 1], out=outp)
 
-            out = np.add(np.dot(this.weights[i - 1], this.network[i - 1]),
-                         this.bias[i - 1])
+            outp = matAdd(outp, this.bias[i - 1])
+            """
+            out = forwardMul(this.weights[i - 1], this.network[i - 1],
+                             this.bias[i - 1])
+            """
             # run the activation function
 
-            this.network[i][:, 0] = sig(out)[:, 0]
+            this.network[i][:, 0] = sigmoid(outp, False)[:, 0]
 
     def backPropagate(this, goal):
         """
@@ -111,44 +119,46 @@ class Network:
         dWeight = gradient (dot) transpose(this_output)
         dBias = gradient
         """
-        g = np.zeros(this.network[-1].shape)
-        g[:, 0] = goal
 
         assert this.network[-1].size == len(goal), (
             "goal is not the same length as output" +
             " layer rather it is %r" % len(goal))
 
-        this.Error = np.subtract(g, this.network[-1])  # get the difference
+        this.Error = subt(goal, this.network[-1])  # get the difference
 
         restLayers = this.network[:-1]
         errs = []
         errs.append(this.Error)
 
-        sig = np.vectorize(sigmoid)  # vectorize the sigmoid
+        # sig = np.vectorize(sigmoid)  # vectorize the sigmoid
 
         i = len(this.weights) - 1  # start with the last layer
         for layer in restLayers[::-1]:  # reverse the array to go backwards
             prevError = errs.pop()
 
-            layer_error = np.dot(np.transpose(this.weights[i]), prevError)
+            layer_error = np.array(layer)
+            np.dot(this.weights[i].transpose(), prevError, out=layer_error)
 
-            dPrev = np.zeros(this.network[i + 1].shape)
-            dPrev[:, 0] = sig(this.network[i + 1], derivitave=True)[:, 0]
+            #dPrev = np.zeros(this.network[i + 1].shape)
+            dPrev = sigmoid(this.network[i + 1], True)
 
-            # calc the cahnge in weights
+            # calc the change in weights
+            """
             gradients = np.multiply(
                 Network.eta, np.multiply(
                     prevError, dPrev))
-
-            dWeight = np.dot(gradients, np.transpose(layer))
+            """
+            gradients = multi(Network.eta, multi(prevError, dPrev))
+            dWeight = np.array(this.weights[i])
+            np.dot(gradients, layer.transpose(), out=dWeight)
 
             assert dWeight.shape == this.weights[
                 i].shape, "sizes are not equal"
             # add the change to the weight
-            this.weights[i] = np.add(this.weights[i], dWeight)
+            this.weights[i] = matAdd(this.weights[i], dWeight)
 
             # add the change in bias
-            this.bias[i] = np.add(this.bias[i], gradients)
+            this.bias[i] = matAdd(this.bias[i], gradients)
 
             errs.append(layer_error)
             i -= 1
@@ -167,7 +177,9 @@ class Network:
 
         # set the inputs
         # assign the input layer the inputs
-        this.network[0][:, 0] = list(inputs)
+        #this.network[0][:, 0] = list(inputs)
+        assert this.network[0].shape == inputs.shape
+        this.network[0][:, 0] = inputs[:, 0]
 
     def getError(this, goal):
         '''
@@ -188,7 +200,7 @@ class Network:
         assert len(this.network[-1]) == len(goal), (
             "goal is not the same length as output layer" +
             " rather it is %r" % len(goal))
-
+        """
         for i in range(len(goal)):
                 # find the difference between the output and the goal neuron
             e = (goal[i] - this.network[-1][i])
@@ -196,7 +208,9 @@ class Network:
 
         err /= len(goal)
         err = mt.sqrt(err)
-        return err
+        """
+
+        return float(RMS(goal, this.network[-1]).sum(axis=0))
 
     def getResults(this):
         """
@@ -242,10 +256,15 @@ class Network:
         output neuron errors
 
         """
-        this.setInput(inputs)
+        g = np.array(output, dtype="float64")
+        g = g.reshape(this.network[-1].shape)
+        i = np.array(inputs, dtype="float64")
+        i = i.reshape(this.network[0].shape)
+
+        this.setInput(i)
         this.feedForward()
-        this.backPropagate(output)
-        return this.getError(output)
+        this.backPropagate(g)
+        return this.getError(g)
 
     def test(this, inputs):
         """
@@ -267,6 +286,10 @@ class Network:
         return this.getResults()
 
 
+tar = "cpu"
+
+
+@vectorize(["float64(float64, boolean)"], target=tar)
 def sigmoid(x, derivitave=False):     # the activation function
     if(derivitave):
         return x * (1.0 - x)
@@ -278,3 +301,38 @@ def sigmoid(x, derivitave=False):     # the activation function
         return 1.0
 
     return 1 / (1 + mt.exp(x * -1.0))
+
+
+@vectorize(["float64(float64, float64)"], target=tar)
+def multi(x, y):
+    """
+    mutiply element wise
+
+    """
+    return x * y
+
+
+@vectorize(["float64(float64, float64)"], target=tar)
+def matAdd(x, y):
+    """
+    add the vectors element wise
+
+    """
+    return x + y
+
+
+@vectorize(["float64(float64, float64)"], target=tar)
+def subt(x, y):
+    """
+    subtract element wise
+
+    """
+    return x - y
+
+
+@vectorize(["float64(float64, float64)"], target=tar)
+def RMS(goal, output):
+    """
+    Calc the RMS for a single element
+    """
+    return ((goal - output) ** 2) / 2
