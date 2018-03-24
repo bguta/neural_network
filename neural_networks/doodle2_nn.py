@@ -327,9 +327,7 @@ def testImage(img, nn):
 
             pixels = pic.reshape(int(28 * 28), 1)
 
-            nn.setInput(pixels)
-            nn.feedForward()
-            v = nn.getResults()
+            v = nn.test(pixels)
             # print(str(v))
             ans = np.argmax(v)
 

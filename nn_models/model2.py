@@ -79,6 +79,8 @@ class Network:
         layers activations multiplied by their corresponding
         weights fed into the sigmoid.
 
+        You should not call this directly, rather call test/train
+
         equations:
         raw_out = Weight_matrix * prev_Output + Bias_vector
         output = activation(raw_out)
@@ -113,6 +115,8 @@ class Network:
         It changes the weights based on the gradient
         and output of the layer before it.
         it also changes the bias based on the outputs
+
+        You should not call this directly, rather call train
 
         equations:
         gradient = eta * Error * deriv_prev_Output
@@ -170,6 +174,8 @@ class Network:
         a list of numbers that correspond to the input for each input neurons.
         must have the same length as the number of neurons in the input layer
         i.e the number passed in topology
+
+        You should not call this directly, rather call test/train
         '''
         assert len(this.network[0]) == len(inputs), (
             "input is not the same length as input"
@@ -187,6 +193,8 @@ class Network:
         This calculates the error by summing the difference squared of
         each neuron in the output layer with its
         goal and then taking root of the mean.
+
+        You should not call this directly, rather call train
 
         @param goal
         a list containing the desired outputs of the network for a given input.
@@ -214,7 +222,9 @@ class Network:
 
     def getResults(this):
         """
-        This gets the results of the output layer
+        This gets the results of the output layer.
+
+        You should not call this directly, rather call test
 
         @returns
         A list of numbers containing the output of the
@@ -281,7 +291,9 @@ class Network:
         the output of the network
 
         """
-        this.setInput(inputs)
+        i = np.array(inputs, dtype="float64")
+        i = i.reshape(this.network[0].shape)
+        this.setInput(i)
         this.feedForward()
         return this.getResults()
 

@@ -1,4 +1,5 @@
 import sys
+import numpy as np
 sys.path.append('../')
 from nn_models import model2 as m2  # noqa
 
@@ -30,10 +31,12 @@ def main():
     while True:
         err = 0
         for i in range(len(inputs)):
-            net.setInput(inputs[i])
-            net.feedForward()
-            net.backPropagate(outputs[i])
-            err += net.getError(outputs[i])
+            vec = np.array(inputs[i])
+            vec = vec.reshape(len(inputs[i]), 1)
+            out = np.array(outputs[i])
+            out = out.reshape(len(outputs[i]), 1)
+
+            err += net.train(vec, out)
         print("error: " + str(err))
         if err <= 0.01:
             break
@@ -46,9 +49,7 @@ def main():
         a = float(input("type 1st input: "))
         b = float(input("type 2nd input: "))
 
-        net.setInput([a, b])
-        net.feedForward()
-        print(str(net.getResults()))
+        print(str(net.test([a, b])))
 
 
 if __name__ == '__main__':
