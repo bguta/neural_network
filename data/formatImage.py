@@ -30,5 +30,22 @@ def rgb2gray(rgb):
     return np.dot(rgb[..., :3], [0.299, 0.587, 0.114])
 
 
+def format(imName):
+    """
+    format a given image (png made in paint) to make it a 28 by 28 greyscale image
+    """
+    im = Im.open(imName)
+    im = im.resize((28, 28), Im.ANTIALIAS)
+
+    im = im.convert('L')
+    im = imo.invert(im)
+    im = im.convert('RGB')
+    im.save(imName)
+
+    pic = image.imread(imName)
+    gpic = rgb2gray(pic)
+    imsave(imName, gpic)
+
+
 if __name__ == "__main__":
     main()

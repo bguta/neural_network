@@ -25,9 +25,9 @@ class Network:
     must contain numbers greater or equal to 1. First number is
     always the input and the last is the output
     """
-    eta = 0.01
 
     def __init__(this, topology):
+        this.eta = 0.01
         """Create the network."""
 
         # this list contains a set of lists such that each
@@ -62,6 +62,7 @@ class Network:
         # weight for the (i) -> (i +1) in the list this.network
         this.weights = []
         # setupt the weight matrix randomly
+        np.random.seed()  # set the seed randomly
         for i in range(1, len(this.network)):
             # random method
             """
@@ -152,7 +153,8 @@ class Network:
                 Network.eta, np.multiply(
                     prevError, dPrev))
             """
-            gradients = multi(Network.eta, multi(prevError, dPrev))
+            gradients = multi(this.eta, multi(prevError, dPrev))
+
             dWeight = np.array(this.weights[i])
             np.dot(gradients, layer.transpose(), out=dWeight)
 
@@ -307,15 +309,15 @@ def sigmoid(x, derivitave=False):     # the activation function
         return x * (1.0 - x)
 
     if(x < -709.0):  # to avoid overflow
-        return 0.0
+        return np.random.uniform(high=1.216780750623423e-308)
 
-    if(x > 1000):    # Really big
-        return 1.0
+    # if(x > 1000):    # Really big
+    #     return 1.0
 
     return 1 / (1 + mt.exp(x * -1.0))
 
 
-@vectorize(["float64(float64, float64)"], target=tar)
+@vectorize(["float64(float64, float64)"], target=tar, nopython=True)
 def multi(x, y):
     """
     mutiply element wise
@@ -324,7 +326,7 @@ def multi(x, y):
     return x * y
 
 
-@vectorize(["float64(float64, float64)"], target=tar)
+@vectorize(["float64(float64, float64)"], target=tar, nopython=True)
 def matAdd(x, y):
     """
     add the vectors element wise
@@ -333,7 +335,7 @@ def matAdd(x, y):
     return x + y
 
 
-@vectorize(["float64(float64, float64)"], target=tar)
+@vectorize(["float64(float64, float64)"], target=tar, nopython=True)
 def subt(x, y):
     """
     subtract element wise
@@ -342,7 +344,7 @@ def subt(x, y):
     return x - y
 
 
-@vectorize(["float64(float64, float64)"], target=tar)
+@vectorize(["float64(float64, float64)"], target=tar, nopython=True)
 def RMS(goal, output):
     """
     Calc the RMS for a single element

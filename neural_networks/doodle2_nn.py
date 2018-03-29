@@ -7,7 +7,8 @@ import sys
 import math as mt
 from functools import reduce
 sys.path.insert(0, "../")
-from nn_models import model2 as md  # noqa
+from nn_models import model2 as md
+from data import formatImage
 import time  # noqa
 
 inputSize = 28 * 28  # the pixels space
@@ -178,15 +179,15 @@ def main():
     """ Make the doodle neural net."""
     #t_in = time.time()
     # get the data
-    trainingSet = makeData(test=True, useBigData=True)
+    trainingSet = makeData(test=True, useBigData=False)
     #print("Time to load data (sec): " + str(time.time() - t_in))
 
-    composition = [inputSize, 100, 10,
+    composition = [inputSize, 60,
                    outputSize]  # the network composition
 
     nn = md.Network(composition)
     nn.eta = 10
-    epcs = 1
+    epcs = 10
 
     #print("LEARNING RATE: " + str(nn.eta) + "\n")
 
@@ -279,15 +280,13 @@ def train(data, goal, net, numEpochs=100, plot=True):
 
         #print("End of epoch: " + str(i))
         #print("Error: " + str(err))
-        #print("Change in error: " + str(dE) + "\n")
-
+        print("Change in error: " + str(dE) + "\n")
+        # net.eta = 100 / (epochs + 1)  # decrease the learning rate
         changeLearningRate(net, epochs, decay)  # change the learning rate
 
         if err <= 200:
             break
 
-        if dE == 0:
-            break
             # net.eta = net.eta = random.uniform(0.000001, net.eta)
         #print("LEARNING RATE: " + str(net.eta) + "\n")
         prevE = err
@@ -322,8 +321,11 @@ def test(data, goal, net):
 def testImage(img, nn):
     if ".png" in img:
         try:
-            pic = image.imread(img)
-            image.imread
+            if img in imgs:
+                pic = image.imread(img)
+            else:
+                formatImage.format(img)
+                pic = image.imread(img)
 
             pixels = pic.reshape(int(28 * 28), 1)
 
