@@ -1,12 +1,13 @@
+"""
+Model of a simple feed forward neural network using mostly numpy.
+
+@author Bereket Guta.
+"""
+
 import numpy as np
 import math as mt
 from numba import jit, vectorize, float64, boolean
-
-"""
-This is an implementation of a neural network using mostly numpy
-
-@author Bereket Guta
-"""
+import pickle
 
 
 class Network:
@@ -27,8 +28,10 @@ class Network:
     """
 
     def __init__(this, topology):
-        this.eta = 0.01
         """Create the network."""
+
+        this.eta = 0.01  # the learning rate
+        this.topology = topology  # the makeup of the network
 
         # this list contains a set of lists such that each
         # index corresponds to a layer of the network
@@ -298,6 +301,48 @@ class Network:
         this.setInput(i)
         this.feedForward()
         return this.getResults()
+
+    def save(this, name):
+        """Save the model to a file.
+
+        This saves the model's weights and biases as well its makeup i.e. how many layers/neurons it has.
+
+        @param name
+        the name of the file for this particular network without ".pkl"
+        e.g "net_10_10_1"
+        """
+        weight_data = this.weights
+        bias_data = this.bias
+        topology_data = this.topology
+
+        data = [topology_data, weight_data, bias_data]
+
+        with open(name + ".pkl", 'wb') as file:  # open and write the file
+            pickle.dump(data, file, pickle.HIGHEST_PROTOCOL)
+
+    def load(this, name):
+        """Load and initalize this model using saved weights and biases.
+
+        This network must have the same topology as the one saved in the file.
+        This file loads a file the is saved in strictly the same format as the
+        save method.
+
+        @param name
+        the name of the file for this particular network without ".pkl"
+        e.g "net_10_10_1"
+        """
+        with open(name + ".pkl", 'rb') as file:
+            data = pickle.load(file)
+
+        # assert equality of the saved data with this networks
+        assert len(data[0]) == len(this.topology), (
+            "this topology is not equal to saved network's topology. The saved network has topology: " + str(data[0]))
+        for i, j in zip(data[0], this.topology):
+            assert i == j, (
+                "The topologies are not equal The saved network has topology: " + str(data[0]))
+
+        this.weights = data[1]
+        this.bias = data[2]
 
 
 tar = "cpu"
