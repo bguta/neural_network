@@ -94,8 +94,7 @@ small_Data = [  # the small data set
 
 
 def makeData(test=False, useBigData=False):
-    """ Make the data and return a dict that contains the data and goal."""
-
+    """Make the data and return a dict that contains the data and goal."""
     print("Importing Data...")
     dTrain = []
     dTest = []
@@ -174,22 +173,27 @@ def makeData(test=False, useBigData=False):
 
     return {"data": data, "goal": goal, "tData": tData, "tGoal": tGoal}
 
+lr = 0.01
+# random.uniform(0.0001, 100)
+eps = 50
+
 
 def main():
-    """ Make the doodle neural net."""
-    #t_in = time.time()
+    """Make the doodle neural net."""
+    # t_in = time.time()
     # get the data
     trainingSet = makeData(test=True, useBigData=False)
-    #print("Time to load data (sec): " + str(time.time() - t_in))
+    # print("Time to load data (sec): " + str(time.time() - t_in))
 
-    composition = [inputSize, 60,
+    composition = [inputSize, 60, 40,
                    outputSize]  # the network composition
 
     nn = md.Network(composition)
-    nn.eta = 10
-    epcs = 10
+    nn.eta = lr
+    print("Learning rate: " + str(nn.eta))
+    epcs = eps
 
-    #print("LEARNING RATE: " + str(nn.eta) + "\n")
+    # print("LEARNING RATE: " + str(nn.eta) + "\n")
 
     # do a pre test for the network
     t_in = time.time()
@@ -205,8 +209,8 @@ def main():
     # test again
     test(trainingSet["tData"], trainingSet["tGoal"], nn)
 
-    #print("\nTesting created images...")
-    #print("labels: " + str(labels) + "\n")
+    # print("\nTesting created images...")
+    # print("labels: " + str(labels) + "\n")
     for p in imgs:
         testImage(p, nn)
 
@@ -248,13 +252,15 @@ def train(data, goal, net, numEpochs=100, plot=True):
     xs, y1 = [], []  # the points
     y2 = []
     decay = net.eta / numEpochs
+    load = len(data)
     for epochs in range(numEpochs):
-        xs.append(epochs)
+        xs.append(epochs + 1)
 
         err = 0  # the incured error
         te_in = time.time()
-        #print("Starting epoch " + str(i))
-        for j in range(len(data)):
+        # print("Starting epoch " + str(i))
+        print("Epoch (" + str(epochs + 1) + "/" + str(numEpochs) + ")")
+        for j in range(load):
             """
             net.setInput(data[j][:-1])  # everythin except the label
 
@@ -264,8 +270,10 @@ def train(data, goal, net, numEpochs=100, plot=True):
             # goal is pushed into the outputs neurons
             net.backPropagate(goal[j])
             """
-            err += net.train(data[j][:-1], goal[j])
 
+            prograssBar(j + 1, load)
+            err += net.train(data[j][:-1], goal[j])
+        print("\n")
         dE = err - prevE  # change in error
         print("Time to go through epoch #" + str(i) +
               " (sec): " + str(time.time() - te_in))
@@ -273,27 +281,33 @@ def train(data, goal, net, numEpochs=100, plot=True):
         if plot:
             y1.append(err)  # the y point
             y2.append(net.eta)
-            addPoint(xs, y1, ax1)
+            addPoint(xs, y1, ax1, shape="-")
             addPoint(xs, y2, ax2, colour="b")
             plt.draw()
             plt.pause(0.0001)
 
-        #print("End of epoch: " + str(i))
-        #print("Error: " + str(err))
+        # print("End of epoch: " + str(i))
+        print("Learning rate: " + str(net.eta))
+        print("Error: " + str(err))
         print("Change in error: " + str(dE) + "\n")
         # net.eta = 100 / (epochs + 1)  # decrease the learning rate
-        changeLearningRate(net, epochs, decay)  # change the learning rate
+        # changeLearningRate(net, epochs, decay)  # change the learning rate
 
         if err <= 200:
             break
 
+        if not (dE <= 0.001 and dE >= -0.001):
+            if err >= 200:
+                searchThanConv(net, epochs)
+        #     print("END")
+        #     break
+            # net.eta = random.uniform(50, 100)
             # net.eta = net.eta = random.uniform(0.000001, net.eta)
-        #print("LEARNING RATE: " + str(net.eta) + "\n")
         prevE = err
         i += 1
 
     # if err <= 1:
-    #print("Done training\n")
+    # print("Done training\n")
     # break
     """
 
@@ -341,7 +355,7 @@ def testImage(img, nn):
             pass
 
 
-def addPoint(xs, ys, axis, colour="r"):
+def addPoint(xs, ys, axis, colour="r", shape="o"):
     """
     animate the plot of the error
 
@@ -349,8 +363,25 @@ def addPoint(xs, ys, axis, colour="r"):
     @param ys a list of y points
     @param axis i.e suplot
     """
-    axis.plot(xs, ys, colour + "o")
+    axis.plot(xs, ys, colour + shape)
     return True
+
+
+def prograssBar(val, final):
+    """
+    Show the prograss.
+
+    @param val
+    the current value of the prograss (you should increase this yourself)
+
+    @param final
+    the final goal
+    """
+    maxlen = 50
+    step = final // maxlen
+
+    print("\r[ " + "#" * (val // step) + " ] " +
+          str(int(val * 100.0 / final)) + "% ", end="")
 
 
 def changeLearningRate(net, epoch, decay):
@@ -368,6 +399,26 @@ def changeLearningRate(net, epoch, decay):
     the learning rate
     """
     net.eta = net.eta * 1 / (1 + decay * epoch)
+
+
+def searchThanConv(net, epoch, eta=lr, searchE=int(eps * 0.8), alpha=10):
+    """
+    search then converge- (STC) learning rate
+    schedules (Darken and Moody, 1990b, 1991)
+
+    This is constant at eta for a given number of epochs (searchE)
+    than it begins to decrease
+
+    @param alpha - a constatnt
+    @pararm eta - the original learning rate
+    @param searchE - the number of epochs to maintain eta for
+    @param net - the neural net
+    @param epoch - the epoch number
+
+    visit here for more info: http://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.42.2884&rep=rep1&type=pdf
+    """
+    net.eta = eta * (1 + (alpha / eta) * (epoch / searchE)) / \
+        (1 + (alpha / eta) * (epoch / searchE) + (epoch**2 / searchE))
 
 
 if __name__ == "__main__":

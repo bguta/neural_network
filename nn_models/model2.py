@@ -309,10 +309,10 @@ def sigmoid(x, derivitave=False):     # the activation function
         return x * (1.0 - x)
 
     if(x < -709.0):  # to avoid overflow
-        return np.random.uniform(high=1.216780750623423e-308)
+        return 0
 
-    # if(x > 1000):    # Really big
-    #     return 1.0
+    if(x > 1000):    # Really big
+        return 1.0
 
     return 1 / (1 + mt.exp(x * -1.0))
 
