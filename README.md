@@ -28,7 +28,7 @@ On Github, click on the green button that says "Clone or download", then "Downlo
 
 Extract the zipped/compressed folder and open the resulting folder.
 
-Run xor_nn.py to see an example or create your own code using the xor network as a template
+Run xor2_nn.py to see an example or create your own code using the xor network as a template
 
 ## Testing
 
