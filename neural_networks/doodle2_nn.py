@@ -9,7 +9,7 @@ from functools import reduce
 sys.path.insert(0, "../")
 from nn_models import model2 as md
 from data import formatImage
-import time  # noqa
+import time
 
 inputSize = 28 * 28  # the pixels space
 outputSize = 8  # the number of choices for objects
@@ -26,7 +26,7 @@ FLOWER = 7
 labels = ["ball", "lightbulb", "sun", "cloud", "eye", "bike", "dog", "flower"]
 
 answers = [
-    [1] + [0] * (outputSize - 1),
+    [0] * 0 + [1] + [0] * (outputSize - 1),
     [0] * 1 + [1] + [0] * (outputSize - 2),
     [0] * 2 + [1] + [0] * (outputSize - 3),
     [0] * 3 + [1] + [0] * (outputSize - 4),
@@ -185,7 +185,7 @@ def main():
     trainingSet = makeData(test=True, useBigData=False)
     # print("Time to load data (sec): " + str(time.time() - t_in))
 
-    composition = [inputSize, 60, 40,
+    composition = [inputSize, 100, 20, 10,
                    outputSize]  # the network composition
 
     nn = md.Network(composition)
@@ -203,7 +203,7 @@ def main():
     # train the network
     t_in = time.time()
     train(trainingSet["data"], trainingSet["goal"], nn, numEpochs=epcs,
-          plot=False)
+          plot=True)
     print("Time to train network (sec): " + str(time.time() - t_in))
 
     # test again
@@ -217,8 +217,13 @@ def main():
     while True:
 
         imgName = input(
-            "please enter the file path of the png pic to test (enter q to quit): ")
+            "please enter the file path of the png pic to test (enter q to quit or s to save): ")
         if imgName == "q":
+            break
+        if imgName == "s":
+            name = input("please enter the name of the file (ex. net1): ")
+            nn.save(name)
+            print("SAVED")
             break
         testImage(imgName, nn)
 
@@ -275,7 +280,7 @@ def train(data, goal, net, numEpochs=100, plot=True):
             err += net.train(data[j][:-1], goal[j])
         print("\n")
         dE = err - prevE  # change in error
-        print("Time to go through epoch #" + str(i) +
+        print("Time to go through epoch #" + str(i + 1) +
               " (sec): " + str(time.time() - te_in))
 
         if plot:

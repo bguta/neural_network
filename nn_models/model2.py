@@ -1,5 +1,4 @@
-"""
-Model of a simple feed forward neural network using mostly numpy.
+"""Model of a simple feed forward neural network using mostly numpy.
 
 @author Bereket Guta.
 """
@@ -324,12 +323,14 @@ class Network:
         """Load and initalize this model using saved weights and biases.
 
         This network must have the same topology as the one saved in the file.
-        This file loads a file the is saved in strictly the same format as the
+        This method loads a file the is saved in strictly the same format as the
         save method.
 
         @param name
         the name of the file for this particular network without ".pkl"
         e.g "net_10_10_1"
+
+        @throws assert errors if the topolgies are not equal
         """
         with open(name + ".pkl", 'rb') as file:
             data = pickle.load(file)
