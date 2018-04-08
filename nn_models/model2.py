@@ -84,7 +84,7 @@ class Network:
                                                   4 * mt.sqrt(6 / (this.network[i].size + this.network[i - 1].size)), (this.network[i].size, this.network[i - 1].size)))
 
     # propagation
-    def feedForward(this):
+    def feedForward(this, drop=True, pr=0.5):
         """
         Feed forward the sum of the previous
         layers activations multiplied by their corresponding
@@ -98,14 +98,26 @@ class Network:
 
 
         """
+
+        # if drop:  # drop the inputs
+        #     this.inputs = np.array(this.network[0])
+        #     this.network[0][:, 0] = dropout(this.network[0])[:, 0]
+
         # sig = np.vectorize(sigmoid)  # make the sigmoid a vector function
         # set the output for every layer other than the input
-        for i in range(1, len(this.network)):
+        last = len(this.network)
+        for i in range(1, last):
             # the weight from the previous layer to this layer, the output of
             # the previous layer and the bias that is points from the
             # previous layer to this layer
+
             outp = np.array(this.network[i])
-            np.dot(this.weights[i - 1], this.network[i - 1], out=outp)
+
+            if drop:
+                np.dot(this.weights[i - 1], this.network[i - 1], out=outp)
+
+            else:
+                np.dot(this.weights[i - 1] * pr, this.network[i - 1], out=outp)
 
             outp = matAdd(outp, this.bias[i - 1])
             """
@@ -115,6 +127,13 @@ class Network:
             # run the activation function
 
             this.network[i][:, 0] = sigmoid(outp, False)[:, 0]
+
+            if i > 1 and drop:  # undrop
+                this.network[i - 1][:, 0] = this.prev[:, 0]
+
+            if i >= 1 and i != last - 1 and drop:  # drop
+                this.prev = np.array(this.network[i])
+                this.network[i][:, 0] = dropout(this.network[i])[:, 0]
 
     def backPropagate(this, goal):
         """
@@ -310,7 +329,7 @@ class Network:
         i = np.array(inputs, dtype="float64")
         i = i.reshape(this.network[0].shape)
         this.setInput(i)
-        this.feedForward()
+        this.feedForward(drop=False)
         return this.getResults()
 
     def save(this, name):
@@ -430,3 +449,19 @@ def softmax(vector, derivitave=False):
     for n in vector:
         v.append(mt.exp(n + D) / bottom)
     return v
+
+
+def dropout(vector, prob=0.5):
+    """
+    set a random element to zero ; implementation of dropout to be used in feedforward
+    """
+
+    pr = np.random.rand(vector.size, 1)
+    dropped = np.empty(vector.shape)
+    for i in range(vector.size):
+        if float(pr[i]) <= prob:
+            dropped[i] = 0
+        else:
+            dropped[i] = vector[i]
+
+    return vector
