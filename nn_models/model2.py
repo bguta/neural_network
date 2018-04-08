@@ -7,6 +7,7 @@ import numpy as np
 import math as mt
 from numba import jit, vectorize, float64, boolean
 import pickle
+from functools import reduce
 
 
 class Network:
@@ -31,6 +32,13 @@ class Network:
 
         this.eta = 0.01  # the learning rate
         this.topology = topology  # the makeup of the network
+
+        # if this is a classification problem or not i.e dog or cat ; this
+        # determines the use of softmax
+        if this.topology[-1] >= 2:
+            this.isClassify = True
+        else:
+            this.isClassify = False
 
         # this list contains a set of lists such that each
         # index corresponds to a layer of the network
@@ -234,6 +242,10 @@ class Network:
         A list of numbers containing the output of the
         neurons in the output layer
         """
+
+        if this.isClassify:
+            return list(softmax(this.network[-1]))
+
         output = []
 
         for n in this.network[-1]:  # output layer
@@ -396,3 +408,25 @@ def RMS(goal, output):
     Calc the RMS for a single element
     """
     return ((goal - output) ** 2) / 2
+
+
+def softmax(vector, derivitave=False):
+    """
+    A soft max function to be used in getResults()
+
+    @param vector
+    the vector which softmax will be applied to
+
+    @returns
+    a new vector such that each element has the softmax function applied to it
+    """
+    #D = -1.0 * np.max(vector)
+    D = 0
+    # if derivitave:
+    #     return np.diag(vector) - np.dot(vector, vector.T)
+
+    bottom = reduce(lambda x, y: x + mt.exp(y + D), vector, 0.0)
+    v = []
+    for n in vector:
+        v.append(mt.exp(n + D) / bottom)
+    return v
