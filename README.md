@@ -34,7 +34,7 @@ Run xor2_nn.py to see an example or create your own code using the xor network a
 
 Currently testing the models. Model 2 is currently the best, but I still need to check it throughly for bugs
 
-## Images
+## Images for Doodle network
 ![preview](data/pics/cloud.png) 
 ![preview](data/pics/basketball.png) 
 ![preview](data/pics/LightBulb.png) 
