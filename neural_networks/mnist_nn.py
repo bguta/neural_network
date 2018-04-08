@@ -29,7 +29,11 @@ answers = [
 
 ]
 
+"""
+this is the data, download it from
+https://makeyourownneuralnetwork.blogspot.ca/2015/03/the-mnist-dataset-of-handwitten-digits.html
 
+"""
 dataset = [
     [
         "../data/mnist/mnist_train.csv",
@@ -72,8 +76,7 @@ def makeData():
 
     return {"data": data, "goal": goal, "tData": test_data, "tGoal": test_goal}
 
-lr = 0.0001
-# random.uniform(0.0001, 100)
+lr = 0.001
 eps = 50
 
 
@@ -81,17 +84,18 @@ def main():
     """ Make the mnist neural net."""
     trainingSet = makeData()
 
-    composition = [inputSize, 100, 10,
+    composition = [inputSize, 500, 10,
                    outputSize]  # the network composition
 
     nn = md.Network(composition)
+    print("Learning rate: " + str(lr))
     nn.eta = lr
     epcs = eps
 
     test(trainingSet["tData"], trainingSet["tGoal"], nn)
 
     train(trainingSet["data"], trainingSet["goal"], nn,
-          numEpochs=epcs, plot=False)
+          numEpochs=epcs, plot=False, t=trainingSet)
 
     test(trainingSet["tData"], trainingSet["tGoal"], nn)
 
@@ -107,7 +111,7 @@ def main():
         break
 
 
-def train(data, goal, net, numEpochs=100, plot=True):
+def train(data, goal, net, numEpochs=100, plot=True, t=None):
     print("Starting to train...")
 
     prevE = 0
@@ -173,6 +177,8 @@ def train(data, goal, net, numEpochs=100, plot=True):
         if not (dE <= 0.001 and dE >= -0.001):
             if err >= 200:
                 searchThanConv(net, epochs)
+        if t is not None:
+            test(t["tData"], t["tGoal"], net)  # test the net
 
         prevE = err
         i += 1
@@ -191,6 +197,7 @@ def test(data, goal, net):
             correct += 1
 
     print("Score: " + str(correct * 100.0 / len(data)) + " %\n")
+    return correct * 100.0 / len(data)
 
 
 def addPoint(xs, ys, axis, colour="r", shape="o"):
