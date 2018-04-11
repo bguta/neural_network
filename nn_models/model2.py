@@ -313,6 +313,46 @@ class Network:
         this.feedForward()
         return this.getResults()
 
+    def validate(this, inputs, goal, showAll=False):
+        """
+        Test the model with a given set of inputs it has never seen before. This returns the percentage correct
+
+        @param inputs
+        a list of a list of numbers that correspond to the input for each input neurons.
+        must have the same length as the number of neurons in the input layer
+        i.e the number passed in topology
+
+        @param goal
+        a list of a list of numbers that correspond to the goal for each given input. must have the same length
+        as the number of outputs
+
+        @returns a float that represents the percentage this network has correct
+
+        """
+        assert len(inputs) == len(
+            goal), "the inputs do not have the same length as the goals"
+        correct = 0
+        total = len(inputs)
+        classes = [0] * this.topology[-1]
+        total_num = classes[:]
+
+        for x, y in zip(inputs, goal):
+            y_network = this.test(x, useSoftmax=False)
+
+            result = np.argmax(y_network)
+            right_result = np.argmax(y)
+
+            total_num[right_result] += 1
+
+            if result == right_result:
+                classes[result] += 1
+                correct += 1
+
+        if showAll:
+            return list(map(lambda x, y: x / y, classes, total_num))
+
+        return correct * 100.0 / total
+
     def save(this, name):
         """Save the model to a file.
 
