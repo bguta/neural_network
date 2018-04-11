@@ -15,19 +15,10 @@ import time
 inputSize = 28 * 28  # the pixels space
 outputSize = 10  # the number of choices for objects
 
-answers = [
-    [0] * 0 + [1] + [0] * (outputSize - 1),
-    [0] * 1 + [1] + [0] * (outputSize - 2),
-    [0] * 2 + [1] + [0] * (outputSize - 3),
-    [0] * 3 + [1] + [0] * (outputSize - 4),
-    [0] * 4 + [1] + [0] * (outputSize - 5),
-    [0] * 5 + [1] + [0] * (outputSize - 6),
-    [0] * 6 + [1] + [0] * (outputSize - 7),
-    [0] * 7 + [1] + [0] * (outputSize - 8),
-    [0] * 8 + [1] + [0] * (outputSize - 9),
-    [0] * 9 + [1] + [0] * (outputSize - 10)
+answers = []
 
-]
+for i in range(outputSize):
+    answers.append([0] * i + [1] + [0] * (outputSize - 1 - i))
 
 """
 this is the data, download it from
@@ -58,7 +49,7 @@ def makeData():
         for line in info:
             vec = line.split(",")
             goal.append(answers[int(vec[0])])
-            vec = np.asfarray(vec[1:]).reshape(inputSize, 1)
+            vec = np.asfarray(vec[1:]).reshape(inputSize, 1) / 255
             data.append(vec)
 
     test_data = []
@@ -71,7 +62,7 @@ def makeData():
         for line in info:
             vec = line.split(",")
             test_goal.append(answers[int(vec[0])])
-            vec = np.asfarray(vec[1:]).reshape(inputSize, 1)
+            vec = np.asfarray(vec[1:]).reshape(inputSize, 1) / 255
             test_data.append(vec)
 
     return {"data": data, "goal": goal, "tData": test_data, "tGoal": test_goal}
@@ -196,7 +187,7 @@ def test(data, goal, net):
         if(answer == classification):
             correct += 1
 
-    print("Score: " + str(correct * 100.0 / len(data)) + " %\n")
+    print("Score: " + str(correct * 100.0 / len(data)) + " \n")
     return correct * 100.0 / len(data)
 
 
