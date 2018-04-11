@@ -27,7 +27,7 @@ class Network:
     always the input and the last is the output
     """
 
-    def __init__(this, topology):
+    def __init__(this, topology, dropout=False):
         """Create the network."""
 
         this.eta = 0.01  # the learning rate
@@ -39,6 +39,8 @@ class Network:
             this.isClassify = True
         else:
             this.isClassify = False
+
+        this.dropout = dropout  # if we are going to drop neurons while training
 
         # this list contains a set of lists such that each
         # index corresponds to a layer of the network
@@ -82,9 +84,12 @@ class Network:
             # xavier method
             this.weights.append(np.random.uniform(-4 * mt.sqrt(6 / (this.network[i].size + this.network[i - 1].size)),
                                                   4 * mt.sqrt(6 / (this.network[i].size + this.network[i - 1].size)), (this.network[i].size, this.network[i - 1].size)))
-
+        this.probabilities = []
+        for h1 in this.network[1:-1]:
+            this.probabilities.append(h1)
     # propagation
-    def feedForward(this, drop=True, pr=0.5):
+
+    def feedForward(this, drop=True, pr=0.5, train=True):
         """
         Feed forward the sum of the previous
         layers activations multiplied by their corresponding
@@ -114,10 +119,14 @@ class Network:
             outp = np.array(this.network[i])
 
             if drop:
-                np.dot(this.weights[i - 1], this.network[i - 1], out=outp)
+                if train:
+                    np.dot(this.weights[i - 1], this.network[i - 1], out=outp)
 
+                else:
+                    np.dot(this.weights[i - 1] * pr,
+                           this.network[i - 1], out=outp)
             else:
-                np.dot(this.weights[i - 1] * pr, this.network[i - 1], out=outp)
+                np.dot(this.weights[i - 1], this.network[i - 1], out=outp)
 
             outp = matAdd(outp, this.bias[i - 1])
             """
@@ -128,14 +137,19 @@ class Network:
 
             this.network[i][:, 0] = sigmoid(outp, False)[:, 0]
 
-            if i > 1 and drop:  # undrop
+            if i > 1 and drop and train and i < last:  # undrop
                 this.network[i - 1][:, 0] = this.prev[:, 0]
 
-            if i >= 1 and i != last - 1 and drop:  # drop
+            if i >= 1 and i < last - 1 and drop and train:  # drop
                 this.prev = np.array(this.network[i])
-                this.network[i][:, 0] = dropout(this.network[i])[:, 0]
 
-    def backPropagate(this, goal):
+                this.probabilities.pop(i - 1)
+                this.probabilities.insert(i - 1, np.random.binomial(
+                    1, pr, size=this.network[i].shape))
+
+                this.network[i] *= this.probabilities[i - 1]
+
+    def backPropagate(this, goal, pr=0.5, drop=True):
         """
         Stochastic gradient descent
 
@@ -167,6 +181,7 @@ class Network:
         # sig = np.vectorize(sigmoid)  # vectorize the sigmoid
 
         i = len(this.weights) - 1  # start with the last layer
+        last = i
         for layer in restLayers[::-1]:  # reverse the array to go backwards
             prevError = errs.pop()
 
@@ -183,6 +198,12 @@ class Network:
                     prevError, dPrev))
             """
             gradients = multi(this.eta, multi(prevError, dPrev))
+
+            if drop:
+                if i < last:
+                    gradients *= this.probabilities[i]
+                else:
+                    gradients *= pr
 
             dWeight = np.array(this.weights[i])
             np.dot(gradients, layer.transpose(), out=dWeight)
@@ -214,7 +235,7 @@ class Network:
 
         # set the inputs
         # assign the input layer the inputs
-        #this.network[0][:, 0] = list(inputs)
+        # this.network[0][:, 0] = list(inputs)
         assert this.network[0].shape == inputs.shape
         this.network[0][:, 0] = inputs[:, 0]
 
@@ -251,7 +272,7 @@ class Network:
 
         return float(RMS(goal, this.network[-1]).sum(axis=0))
 
-    def getResults(this):
+    def getResults(this, prob=True):
         """
         This gets the results of the output layer.
 
@@ -262,7 +283,7 @@ class Network:
         neurons in the output layer
         """
 
-        if this.isClassify:
+        if this.isClassify and prob:
             return list(softmax(this.network[-1]))
 
         output = []
@@ -307,11 +328,11 @@ class Network:
         i = i.reshape(this.network[0].shape)
 
         this.setInput(i)
-        this.feedForward()
-        this.backPropagate(g)
+        this.feedForward(drop=this.dropout)
+        this.backPropagate(g, drop=this.dropout)
         return this.getError(g)
 
-    def test(this, inputs):
+    def test(this, inputs, useSoftmax=True):
         """
         Test the model with a given input. This returns the output of the network given
         this input
@@ -439,7 +460,7 @@ def softmax(vector, derivitave=False):
     @returns
     a new vector such that each element has the softmax function applied to it
     """
-    #D = -1.0 * np.max(vector)
+    # D = -1.0 * np.max(vector)
     D = 0
     # if derivitave:
     #     return np.diag(vector) - np.dot(vector, vector.T)
@@ -449,19 +470,3 @@ def softmax(vector, derivitave=False):
     for n in vector:
         v.append(mt.exp(n + D) / bottom)
     return v
-
-
-def dropout(vector, prob=0.5):
-    """
-    set a random element to zero ; implementation of dropout to be used in feedforward
-    """
-
-    pr = np.random.rand(vector.size, 1)
-    dropped = np.empty(vector.shape)
-    for i in range(vector.size):
-        if float(pr[i]) <= prob:
-            dropped[i] = 0
-        else:
-            dropped[i] = vector[i]
-
-    return vector
