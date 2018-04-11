@@ -25,16 +25,10 @@ DOG = 6
 FLOWER = 7
 labels = ["ball", "lightbulb", "sun", "cloud", "eye", "bike", "dog", "flower"]
 
-answers = [
-    [0] * 0 + [1] + [0] * (outputSize - 1),
-    [0] * 1 + [1] + [0] * (outputSize - 2),
-    [0] * 2 + [1] + [0] * (outputSize - 3),
-    [0] * 3 + [1] + [0] * (outputSize - 4),
-    [0] * 4 + [1] + [0] * (outputSize - 5),
-    [0] * 5 + [1] + [0] * (outputSize - 6),
-    [0] * 6 + [1] + [0] * (outputSize - 7),
-    [0] * 7 + [1] + [0] * (outputSize - 8)
-]
+answers = []
+
+for i in range(outputSize):
+    answers.append([0] * i + [1] + [0] * (outputSize - 1 - i))
 
 
 imgs = [
