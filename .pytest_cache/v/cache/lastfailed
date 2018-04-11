@@ -1,6 +1,0 @@
-{
-  "tests/test_model.py::TestModel": true,
-  "tests/test_model.py::TestModel::()": true,
-  "tests/test_model2.py::Test": true,
-  "tests/test_model2.py::Test::()": true
-}

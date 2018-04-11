@@ -1,0 +1,7 @@
+[
+  "tests/test_model.py::TestModel::()::test_Input_bias_Neuron",
+  "tests/test_model.py::TestModel::()::test_hiddenNeuron",
+  "tests/test_model.py::TestModel::()::test_Connection",
+  "tests/test_model.py::TestModel::()::test_Net",
+  "tests/test_model2.py::Test::()::test_createNet"
+]
